@@ -56,14 +56,23 @@ export function CadastroForm() {
       return
     }
 
+    // Se o email precisa ser confirmado (sem sessão)
     if (data.user && !data.session) {
-      setSucesso('Conta criada! Verifique seu email para confirmar o cadastro antes de fazer login.')
+      setSucesso(
+        'Conta criada! Verifique seu email para confirmar o cadastro antes de fazer login.'
+      )
+      // Limpa os campos
+      setEmail('')
+      setSenha('')
+      setNomeNegocio('')
+      setTipo('autonomo')
       setLoading(false)
       return
     }
 
+    // Se já tem sessão (email confirmado automaticamente)
     if (data.session) {
-      // Envia e-mail de boas-vindas (não bloqueia o cadastro se falhar)
+      // Envia e-mail de boas-vindas (não bloqueia se falhar)
       fetch('/api/emails/boas-vindas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,6 +82,12 @@ export function CadastroForm() {
           nomeNegocio: data.user?.user_metadata?.nome_negocio || 'seu negócio',
         }),
       }).catch((e) => console.error('Erro ao enviar boas-vindas:', e))
+
+      // Limpa os campos
+      setEmail('')
+      setSenha('')
+      setNomeNegocio('')
+      setTipo('autonomo')
 
       router.push('/dashboard')
       router.refresh()
