@@ -64,7 +64,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
     try {
       const data = await processarAssinatura(
         formData.token,
-        'test@testuser.com' // E-mail fixo de teste exigido pelo Mercado Pago
+        formData.payer?.email || 'test_user_8813910146543731310@testuser.com'
       )
 
       console.log('Resposta da assinatura:', data)
