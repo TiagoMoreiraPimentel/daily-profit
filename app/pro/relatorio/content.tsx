@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { ExportarCSV } from './exportar-csv'
+import { GraficoEvolucao } from './grafico'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -28,11 +29,49 @@ async function buscarRelatorio() {
   const dataInicio = inicio.toISOString().split('T')[0]
   const dataFim = fim.toISOString().split('T')[0]
 
+  // Busca transações do mês atual
   const { data: transacoes } = await supabase
     .from('transactions')
     .select('tipo, valor, natureza, categoria')
     .gte('data', dataInicio)
     .lte('data', dataFim)
+
+  // Busca transações dos últimos 6 meses (para o gráfico)
+  const seisMesesAtras = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1)
+  const dataInicio6Meses = seisMesesAtras.toISOString().split('T')[0]
+
+  const { data: transacoes6Meses } = await supabase
+    .from('transactions')
+    .select('tipo, valor, natureza, data')
+    .gte('data', dataInicio6Meses)
+    .eq('natureza', 'negocio')
+
+  // Agrupa por mês (últimos 6 meses)
+  const porMes: Record<string, { entradas: number; saidas: number }> = {}
+
+  // Inicializa os 6 meses
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    porMes[chave] = { entradas: 0, saidas: 0 }
+  }
+
+  transacoes6Meses?.forEach((t) => {
+    const chave = t.data.substring(0, 7) // YYYY-MM
+    if (!porMes[chave]) return
+    if (t.tipo === 'entrada') porMes[chave].entradas += Number(t.valor)
+    else porMes[chave].saidas += Number(t.valor)
+  })
+
+  // Prepara dados do gráfico (ordem cronológica)
+  const dadosGrafico = Object.entries(porMes)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([mes, v]) => ({
+      mes,
+      entradas: v.entradas,
+      saidas: v.saidas,
+      lucro: v.entradas - v.saidas,
+    }))
 
   const negocio = transacoes?.filter((t) => t.natureza === 'negocio') ?? []
   const pessoal = transacoes?.filter((t) => t.natureza === 'pessoal') ?? []
@@ -71,6 +110,7 @@ async function buscarRelatorio() {
     },
     sobrouDeVerdade: entrouNegocio - saiuNegocio + entrouPessoal - saiuPessoal,
     porCategoria,
+    dadosGrafico,
   }
 }
 
@@ -133,6 +173,15 @@ export async function RelatorioContent() {
           </div>
         </div>
 
+        {/* Gráfico de evolução */}
+        <div className="bg-white rounded-lg border border-zinc-200 p-6 mb-8">
+          <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
+            📈 Evolução dos últimos 6 meses
+          </p>
+          <GraficoEvolucao dados={dados.dadosGrafico} />
+        </div>
+
+        {/* Por categoria */}
         <div className="bg-white rounded-lg border border-zinc-200 p-6">
           <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
             Por categoria (negócio)

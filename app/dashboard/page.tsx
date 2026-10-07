@@ -10,6 +10,7 @@ import { TransacaoList } from './transacao-list'
 import { LogoutButton } from './logout-button'
 import { RealtimeRefresh } from './realtime'
 import { BannerLimite } from './paywall'
+import { AssinarButton } from './assinar-button'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -78,6 +79,7 @@ async function DashboardContent() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {plano === 'free' && <AssinarButton />}
           <Link
             href="/pro/previsao"
             className="text-xs px-3 py-2 rounded-md border border-zinc-200 hover:bg-zinc-50 transition"

@@ -1,4 +1,5 @@
 import { getTransacoesHoje } from '@/lib/queries'
+import { ExcluirTransacao } from './excluir-transacao'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -39,9 +40,9 @@ export async function TransacaoList() {
           </p>
           <ul className="divide-y divide-zinc-100">
             {negocio.map((t) => (
-              <li key={t.id} className="py-3 flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-zinc-900">
+              <li key={t.id} className="py-3 flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-zinc-900 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
                   <p className="text-xs text-zinc-400">
@@ -49,12 +50,13 @@ export async function TransacaoList() {
                   </p>
                 </div>
                 <span
-                  className={`text-sm font-semibold ${
+                  className={`text-sm font-semibold whitespace-nowrap ${
                     t.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
                   }`}
                 >
                   {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
                 </span>
+                <ExcluirTransacao id={t.id} descricao={t.descricao || ''} />
               </li>
             ))}
           </ul>
@@ -68,18 +70,19 @@ export async function TransacaoList() {
           </p>
           <ul className="divide-y divide-zinc-100">
             {pessoal.map((t) => (
-              <li key={t.id} className="py-3 flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-zinc-600">
+              <li key={t.id} className="py-3 flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-zinc-600 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
                   <p className="text-xs text-zinc-400">
                     {formatarHora(t.criado_em)}
                   </p>
                 </div>
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-zinc-500 whitespace-nowrap">
                   {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
                 </span>
+                <ExcluirTransacao id={t.id} descricao={t.descricao || ''} />
               </li>
             ))}
           </ul>

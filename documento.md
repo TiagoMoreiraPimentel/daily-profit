@@ -19,7 +19,7 @@ DECISÕES TRAVADAS:
 - Banco + Auth + Realtime: Supabase
 - Frontend: Next.js 16 + Tailwind v4 + TypeScript
 - Hospedagem front: Vercel (free) — CONFIGURADO
-- Email transacional: Resend — REMOVIDO (sem domínio ainda) [ATUALIZADO]
+- Email transacional: Resend — REMOVIDO (sem domínio ainda)
 - Preço Pro em produção: R$ 19,90/mês
 - Preço em TESTE (atual): R$ 1,00/mês (manter até concluir teste)
 - Plano Free: 30 transações/mês + lucro do dia + separação pessoal/negócio
@@ -37,14 +37,17 @@ DECISÕES TRAVADAS:
   gera card_token_id → backend cria /preapproval com status authorized
 - Mercado Pago: produção (não mais sandbox)
 - Webhook: configurado no painel MP com URL da Vercel
+- Rate limit de e-mails do Supabase Free: 2/hora (bloqueia cadastros)
+  → solução definitiva requer domínio próprio + SMTP (Resend)
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
 - F2: Separação automática pessoal vs. negócio                   [x] FEITO
 - F3: Tela "Lucro do Dia" (entrou, saiu, lucro, lucro do mês)    [x] FEITO
 - F4: Link de cobrança integrado com Mercado Pago                [ ] PENDENTE
-- F5: Previsão simples de caixa (Pro)                            [ ] PENDENTE
-- F6: Relatório mensal de lucro (Pro)                            [ ] PENDENTE
+- F5: Previsão simples de caixa (Pro)                            [x] FEITO
+- F6: Relatório mensal de lucro (Pro)                            [x] FEITO
+- F7: Gráfico de evolução (Pro)                                  [x] FEITO
 
 REGRAS DE NEGÓCIO:
 - Limite do Free aplicado no BACKEND, não no frontend
@@ -96,9 +99,11 @@ FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
 [x] Botão de logout no dashboard
 [x] Mensagens de erro/sucesso em português
 [x] Tratamento de "Email not confirmed" no login
-[x] Campos do formulário limpos após cadastro  [ATUALIZADO]
-[x] Trigger handle_new_user recriado (não existia)  [ATUALIZADO]
-[x] Usuários órfãos corrigidos via SQL  [ATUALIZADO]
+[x] Campos do formulário limpos após cadastro
+[x] Trigger handle_new_user recriado (não existia)
+[x] Usuários órfãos corrigidos via SQL
+[!] Rate limit de e-mails do Supabase Free limita cadastros a 2/hora
+    → aguardar compra de domínio para resolver
 
 FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F1: Tela de registrar transação (entrada/saída, valor, descrição)
@@ -106,8 +111,8 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F3: Tela com cards de resumo (negócio + pessoal)
 [x] Listagem de transações do dia (separada por natureza + hora)
 [x] Supabase Realtime na tela de lucro (atualização automática)
-[x] Badge de plano (Free/Pro) ao lado do nome  [ATUALIZADO]
-[x] Hora nas transações (fuso America/Sao_Paulo)  [ATUALIZADO]
+[x] Badge de plano (Free/Pro) ao lado do nome
+[x] Hora nas transações (fuso America/Sao_Paulo)
 [ ] Edição e exclusão de transação  [ADIADO — não é crítico para MVP]
 [ ] Filtro por data  [ADIADO — não é crítico para MVP]
 
@@ -140,10 +145,12 @@ FASE 6 — Link de Cobrança (F4)
 [ ] Webhook de pagamento aprovado → criar transaction automática
 [ ] Tela de histórico de links
 
-FASE 7 — Funcionalidades Pro
-[ ] F5: Previsão simples de caixa (baseada em recurring)
-[ ] F6: Relatório mensal de lucro (exportável)
-[ ] Gráfico simples de evolução
+FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
+[x] F5: Previsão de caixa (média + tendência + recorrentes)
+[x] Tela de cadastro de contas recorrentes (/pro/recorrentes)
+[x] F6: Relatório mensal de lucro (com exportação CSV)
+[x] Gráfico de evolução dos últimos 6 meses (F7)
+[ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
 
 FASE 8 — Landing Page + SEO
 [ ] Landing page na raiz do site
@@ -184,7 +191,7 @@ FORMATO DE RESPOSTA PADRÃO:
 - Próximo passo sugerido (1-2 linhas)
 
 ESTADO ATUAL:
-- Fase: 5 (Mercado Pago) — EM ANDAMENTO (produção)
+- Fase: 7 (Funcionalidades Pro) — CONCLUÍDA
 - Concluído até agora:
   * FASE 0: Supabase + Mercado Pago + Vercel + repositório GitHub
   * FASE 1: banco completo (tabelas, RLS, funções, view, triggers, seed)
@@ -195,12 +202,15 @@ ESTADO ATUAL:
   * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao)
   * FASE 5: Mercado Pago em produção (plano, assinatura via Brick,
     webhook testado); preço em R$ 1,00 para teste
+  * FASE 7: previsão de caixa (média + tendência + recorrentes),
+    tela de recorrentes, relatório mensal, gráfico de evolução
   * Resend REMOVIDO (sem domínio ainda)
   * Deploy ativo em https://daily-profit-theta.vercel.app
 - Última decisão: preço R$ 1,00 para teste em produção
-- Problema atual: site em produção retornando "Internal Server Error" sem
-  log na Vercel. Investigar antes de seguir.
-- Próximo passo: resolver o Internal Server Error em produção
+- Pendências conhecidas:
+  * Rate limit de 2 e-mails/hora do Supabase Free (resolve com domínio)
+  * Teste real de assinatura R$ 1,00 pendente
+- Próximo passo: Landing Page + SEO (Fase 8)
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 
