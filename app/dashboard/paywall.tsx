@@ -38,6 +38,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
   const [erro, setErro] = useState<string | null>(null)
   const [processando, setProcessando] = useState(false)
   const [sdkPronto, setSdkPronto] = useState(false)
+  const [sucesso, setSucesso] = useState(false)
 
   useEffect(() => {
     if (mpInicializado) {
@@ -64,14 +65,26 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
     try {
       const data = await processarAssinatura(
         formData.token,
-        formData.payer?.email || 'test_user_3746889460@testuser.com'
+        formData.payer?.email || 'test_user_8813910146543731310@testuser.com'
       )
 
       console.log('Resposta da assinatura:', data)
 
       if (data.status === 'authorized' || data.status === 'pending') {
-        router.push('/dashboard')
-        router.refresh()
+        setSucesso(true)
+
+        // Tenta sincronizar o status imediatamente
+        try {
+          await fetch('/api/mercadopago/sincronizar', { method: 'POST' })
+        } catch (e) {
+          console.error('Erro ao sincronizar:', e)
+        }
+
+        // Aguarda 2 segundos para o usuário ver a mensagem
+        setTimeout(() => {
+          router.push('/dashboard')
+          router.refresh()
+        }, 2000)
       } else {
         setErro('Assinatura criada com status: ' + data.status)
       }
@@ -99,9 +112,19 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
           </div>
         )}
 
+        {sucesso && (
+          <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded mb-4">
+            ✅ Assinatura criada com sucesso! Ativando seu plano...
+          </div>
+        )}
+
         {processando ? (
           <div className="py-8 text-center">
             <p className="text-sm text-zinc-500">Processando pagamento...</p>
+          </div>
+        ) : sucesso ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-zinc-500">Redirecionando para o dashboard...</p>
           </div>
         ) : !sdkPronto ? (
           <div className="py-8 text-center">
@@ -135,7 +158,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
             variant="outline"
             className="w-full"
             onClick={onFechar}
-            disabled={processando}
+            disabled={processando || sucesso}
           >
             Cancelar
           </Button>
