@@ -18,7 +18,13 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={handleLogout} disabled={loading}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleLogout}
+      disabled={loading}
+      className="bg-white text-zinc-900 border-zinc-300 hover:bg-zinc-50"
+    >
       {loading ? 'Saindo...' : 'Sair'}
     </Button>
   )

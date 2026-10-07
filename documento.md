@@ -113,7 +113,7 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] Supabase Realtime na tela de lucro (atualização automática)
 [x] Badge de plano (Free/Pro) ao lado do nome
 [x] Hora nas transações (fuso America/Sao_Paulo)
-[x] Excluir transações do dashboard  [NOVO]
+[x] Excluir transações do dashboard
 [ ] Edição de transações  [ADIADO — não é crítico para MVP]
 [ ] Filtro por data  [ADIADO — não é crítico para MVP]
 
@@ -121,7 +121,7 @@ FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
 [x] Banner suave ao atingir 80% do limite
 [x] Modal de bloqueio ao atingir 100%
-[x] Botão "Assinar Pro" sempre visível no dashboard  [NOVO]
+[x] Botão "Assinar Pro" sempre visível no dashboard
 [ ] Email pós-valor (7 dias de uso)  [ADIADO — sem domínio/email]
 
 FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
@@ -209,15 +209,13 @@ ESTADO ATUAL:
     tela de recorrentes, relatório mensal, gráfico de evolução
   * Resend REMOVIDO (sem domínio ainda)
   * Deploy ativo em https://daily-profit-theta.vercel.app
-  * Commit + push feitos
 - Última decisão: preço R$ 1,00 para teste em produção
 - Pendências conhecidas:
   * Rate limit de 2 e-mails/hora do Supabase Free (resolve com domínio)
   * Teste real de assinatura R$ 1,00 pendente
+  * Refresh automático das recorrentes (a confirmar)
   * Landing Page + SEO ainda não iniciada
 - Próximo passo: A DEFINIR com o usuário
-  (opções: Landing Page, Link de Cobrança, Teste de assinatura,
-   Edição de transações, ou outro)
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 

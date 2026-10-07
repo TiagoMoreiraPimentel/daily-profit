@@ -167,7 +167,7 @@ export async function PrevisaoContent() {
           </div>
           <Link
             href="/pro/recorrentes"
-            className="text-xs px-3 py-2 rounded-md border border-zinc-200 hover:bg-zinc-50 transition"
+            className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
           >
             ⚙️ Gerenciar recorrentes
           </Link>

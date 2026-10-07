@@ -82,13 +82,13 @@ async function DashboardContent() {
           {plano === 'free' && <AssinarButton />}
           <Link
             href="/pro/previsao"
-            className="text-xs px-3 py-2 rounded-md border border-zinc-200 hover:bg-zinc-50 transition"
+            className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
           >
             📊 Previsão
           </Link>
           <Link
             href="/pro/relatorio"
-            className="text-xs px-3 py-2 rounded-md border border-zinc-200 hover:bg-zinc-50 transition"
+            className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
           >
             📄 Relatório
           </Link>

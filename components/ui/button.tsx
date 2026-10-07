@@ -13,8 +13,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       default: 'bg-zinc-900 text-white hover:bg-zinc-800',
-      outline: 'border border-zinc-300 bg-white hover:bg-zinc-50',
-      ghost: 'hover:bg-zinc-100',
+      outline: 'border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50',
+      ghost: 'text-zinc-900 hover:bg-zinc-100',
     }
 
     const sizes = {

@@ -9,12 +9,19 @@ export default function Home() {
         <p className="text-zinc-500 mt-4">
           Descubra quanto você realmente lucra por dia.
         </p>
-        <div className="mt-8 flex gap-3 justify-center">
+        <div className="mt-8 flex gap-3 justify-center flex-wrap">
           <Link href="/cadastro">
-            <Button>Criar conta</Button>
+            <Button className="bg-zinc-900 text-white hover:bg-zinc-800">
+              Criar conta
+            </Button>
           </Link>
           <Link href="/login">
-            <Button variant="outline">Entrar</Button>
+            <Button
+              variant="outline"
+              className="bg-white text-zinc-900 border-zinc-300 hover:bg-zinc-50"
+            >
+              Entrar
+            </Button>
           </Link>
         </div>
       </div>

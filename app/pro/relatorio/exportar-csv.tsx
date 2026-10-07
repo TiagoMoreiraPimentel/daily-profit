@@ -33,7 +33,12 @@ export function ExportarCSV({ dados, mes }: { dados: any; mes: string }) {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={exportar}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={exportar}
+      className="bg-white text-zinc-900 border-zinc-300 hover:bg-zinc-50"
+    >
       📥 Exportar CSV
     </Button>
   )
