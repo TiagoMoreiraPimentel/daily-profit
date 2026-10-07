@@ -1,0 +1,58 @@
+import { createClient } from '@/lib/supabase-server'
+import { RecorrentesForm } from './form'
+import { RecorrentesLista } from './lista'
+
+export async function RecorrentesContent() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.tenant_id) {
+    return <p className="text-red-600">Erro: perfil sem tenant.</p>
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-50 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <a
+            href="/pro/previsao"
+            className="text-sm text-zinc-500 hover:text-zinc-900"
+          >
+            ← Voltar à previsão
+          </a>
+        </div>
+
+        <h1 className="text-2xl font-bold text-zinc-900 mb-2">
+          Contas Recorrentes
+        </h1>
+        <p className="text-zinc-500 text-sm mb-8">
+          Cadastre o que entra e sai todo mês no mesmo dia (aluguel, mensalidades,
+          assinaturas). A previsão de caixa vai usar esses valores.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-lg border border-zinc-200 p-6">
+            <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+              Cadastrar nova
+            </h2>
+            <RecorrentesForm tenantId={profile.tenant_id} />
+          </div>
+
+          <div className="bg-white rounded-lg border border-zinc-200 p-6">
+            <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+              Cadastradas
+            </h2>
+            <RecorrentesLista tenantId={profile.tenant_id} />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
