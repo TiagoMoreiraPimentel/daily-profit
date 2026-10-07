@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { getResumoHoje, getResumoMes } from '@/lib/queries'
 import { getStatusPlano } from '@/lib/plano'
@@ -57,7 +58,7 @@ async function DashboardContent() {
           />
         )}
 
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">
             Olá, {profile?.nome || 'usuário'} 👋
@@ -75,7 +76,22 @@ async function DashboardContent() {
             </span>
           </p>
         </div>
-        <LogoutButton />
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/pro/previsao"
+            className="text-xs px-3 py-2 rounded-md border border-zinc-200 hover:bg-zinc-50 transition"
+          >
+            📊 Previsão
+          </Link>
+          <Link
+            href="/pro/relatorio"
+            className="text-xs px-3 py-2 rounded-md border border-zinc-200 hover:bg-zinc-50 transition"
+          >
+            📄 Relatório
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
 
       <p className="text-xs text-zinc-500 uppercase tracking-wide mb-2">

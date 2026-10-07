@@ -19,9 +19,9 @@ DECISÕES TRAVADAS:
 - Banco + Auth + Realtime: Supabase
 - Frontend: Next.js 16 + Tailwind v4 + TypeScript
 - Hospedagem front: Vercel (free) — CONFIGURADO
-- Email transacional: Resend (free) — ainda não configurado
+- Email transacional: Resend — REMOVIDO (sem domínio ainda) [ATUALIZADO]
 - Preço Pro em produção: R$ 19,90/mês
-- Preço em TESTE (atual): R$ 1,00/mês  [ATUALIZADO]
+- Preço em TESTE (atual): R$ 1,00/mês (manter até concluir teste)
 - Plano Free: 30 transações/mês + lucro do dia + separação pessoal/negócio
 - Plano Pro: ilimitado + previsão de caixa + link de cobrança + relatórios
 - Autenticação: Supabase Auth nativo
@@ -35,7 +35,7 @@ DECISÕES TRAVADAS:
 - Suspense obrigatório em páginas dinâmicas (Cache Components do Next.js 16)
 - Mercado Pago: Checkout Bricks (Payment Brick) no frontend
   gera card_token_id → backend cria /preapproval com status authorized
-- Mercado Pago: produção (não mais sandbox)  [ATUALIZADO]
+- Mercado Pago: produção (não mais sandbox)
 - Webhook: configurado no painel MP com URL da Vercel
 
 FUNCIONALIDADES CORE:
@@ -60,9 +60,9 @@ FASE 0 — Fundação (antes de codar)
 [ ] Comprar domínio (adiado)
 [x] Criar conta Supabase
 [x] Criar conta Mercado Pago Developers
-[x] Criar conta Vercel  [ATUALIZADO]
+[x] Criar conta Vercel
 [x] Criar repositório Git local
-[x] Criar repositório remoto (GitHub)  [ATUALIZADO]
+[x] Criar repositório remoto (GitHub)
 
 FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar projeto no Supabase — região South America (São Paulo)
@@ -89,20 +89,25 @@ FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
 [x] Tela de cadastro (/cadastro)
 [x] Tela de login (/login)
 [x] Recuperação de senha (/esqueci-senha + /atualizar-senha)
-[x] Verificação de email (desativada para MVP)
+[x] Verificação de email (DESATIVADA — sem SMTP)
 [x] Middleware de proteção de rotas (proxy.ts)
 [x] Onboarding: criação do tenant via trigger handle_new_user
 [x] Redirecionar para dashboard (/dashboard)
 [x] Botão de logout no dashboard
 [x] Mensagens de erro/sucesso em português
 [x] Tratamento de "Email not confirmed" no login
+[x] Campos do formulário limpos após cadastro  [ATUALIZADO]
+[x] Trigger handle_new_user recriado (não existia)  [ATUALIZADO]
+[x] Usuários órfãos corrigidos via SQL  [ATUALIZADO]
 
 FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F1: Tela de registrar transação (entrada/saída, valor, descrição)
 [x] F2: Campo natureza (negocio/pessoal) com separação visual
 [x] F3: Tela com cards de resumo (negócio + pessoal)
-[x] Listagem de transações do dia (separada por natureza)
+[x] Listagem de transações do dia (separada por natureza + hora)
 [x] Supabase Realtime na tela de lucro (atualização automática)
+[x] Badge de plano (Free/Pro) ao lado do nome  [ATUALIZADO]
+[x] Hora nas transações (fuso America/Sao_Paulo)  [ATUALIZADO]
 [ ] Edição e exclusão de transação  [ADIADO — não é crítico para MVP]
 [ ] Filtro por data  [ADIADO — não é crítico para MVP]
 
@@ -110,7 +115,7 @@ FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
 [x] Banner suave ao atingir 80% do limite
 [x] Modal de bloqueio ao atingir 100%
-[ ] Email pós-valor (7 dias de uso)  [PENDENTE — depende de Resend]
+[ ] Email pós-valor (7 dias de uso)  [ADIADO — sem domínio/email]
 
 FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
 [x] Criar conta Mercado Pago Developers
@@ -123,8 +128,8 @@ FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
 [x] Tratar status: authorized, paused, cancelled, pending
 [x] Bloquear/liberar funções Pro conforme status
 [x] Proxy exclui /api/* do matcher (webhook não passa por auth)
-[x] Migrar para credenciais de PRODUÇÃO  [ATUALIZADO]
-[x] Preço reduzido para R$ 1,00 para teste  [ATUALIZADO]
+[x] Migrar para credenciais de PRODUÇÃO
+[x] Preço reduzido para R$ 1,00 para teste
 [ ] Testar assinatura real com cartão real (R$ 1,00)
 [ ] Verificar atualização automática do tenant para "pro" via webhook
 [ ] Reverter preço para R$ 19,90 após o teste
@@ -146,7 +151,7 @@ FASE 8 — Landing Page + SEO
 [ ] Páginas SEO: "controle financeiro para MEI", "app de lucro para autônomo"
 [ ] Google Search Console
 [ ] Analytics (Plausible ou GA4)
-[ ] Configurar Resend (email transacional)
+[ADIADO] Configurar Resend (email transacional) — sem domínio
 
 FASE 9 — Lançamento
 [ ] Domínio customizado na Vercel
@@ -183,15 +188,19 @@ ESTADO ATUAL:
 - Concluído até agora:
   * FASE 0: Supabase + Mercado Pago + Vercel + repositório GitHub
   * FASE 1: banco completo (tabelas, RLS, funções, view, triggers, seed)
-  * FASE 2: auth completo (cadastro, login, recuperação, logout, proxy)
-  * FASE 3: dashboard completo (cards, form, lista, realtime, resumo)
+  * FASE 2: auth completo (cadastro, login, recuperação, logout, proxy,
+    trigger handle_new_user recriado, usuários órfãos corrigidos)
+  * FASE 3: dashboard completo (cards, form, lista com hora, realtime,
+    badge de plano)
   * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao)
   * FASE 5: Mercado Pago em produção (plano, assinatura via Brick,
     webhook testado); preço em R$ 1,00 para teste
+  * Resend REMOVIDO (sem domínio ainda)
   * Deploy ativo em https://daily-profit-theta.vercel.app
 - Última decisão: preço R$ 1,00 para teste em produção
-- Próximo passo: testar assinatura real com cartão real (R$ 1,00) e
-  verificar se o tenant vira "pro" automaticamente
+- Problema atual: site em produção retornando "Internal Server Error" sem
+  log na Vercel. Investigar antes de seguir.
+- Próximo passo: resolver o Internal Server Error em produção
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 
@@ -205,7 +214,7 @@ Guardar tudo em gerenciador de senhas (Bitwarden, 1Password, etc.).
 - Vercel URL de produção: https://daily-profit-theta.vercel.app
 - Mercado Pago Access Token (produção): [guardada no .env e Vercel]
 - Mercado Pago Public Key (produção): [guardada no .env e Vercel]
-- Resend API key: [a definir — Fase 8]
+- Resend API key: REMOVIDO — sem domínio
 - Domínio: [a definir]
 
 📌 COMO USAR ESTE PROMPT:

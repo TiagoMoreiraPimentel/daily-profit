@@ -1,0 +1,167 @@
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase-server'
+import { ExportarCSV } from './exportar-csv'
+
+function formatarMoeda(valor: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(valor)
+}
+
+async function buscarRelatorio() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.tenant_id) return null
+
+  const hoje = new Date()
+  const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+  const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
+  const dataInicio = inicio.toISOString().split('T')[0]
+  const dataFim = fim.toISOString().split('T')[0]
+
+  const { data: transacoes } = await supabase
+    .from('transactions')
+    .select('tipo, valor, natureza, categoria')
+    .gte('data', dataInicio)
+    .lte('data', dataFim)
+
+  const negocio = transacoes?.filter((t) => t.natureza === 'negocio') ?? []
+  const pessoal = transacoes?.filter((t) => t.natureza === 'pessoal') ?? []
+
+  const entrouNegocio = negocio
+    .filter((t) => t.tipo === 'entrada')
+    .reduce((acc, t) => acc + Number(t.valor), 0)
+  const saiuNegocio = negocio
+    .filter((t) => t.tipo === 'saida')
+    .reduce((acc, t) => acc + Number(t.valor), 0)
+  const entrouPessoal = pessoal
+    .filter((t) => t.tipo === 'entrada')
+    .reduce((acc, t) => acc + Number(t.valor), 0)
+  const saiuPessoal = pessoal
+    .filter((t) => t.tipo === 'saida')
+    .reduce((acc, t) => acc + Number(t.valor), 0)
+
+  const porCategoria: Record<string, { entrada: number; saida: number }> = {}
+  negocio.forEach((t) => {
+    const cat = t.categoria || 'Sem categoria'
+    if (!porCategoria[cat]) porCategoria[cat] = { entrada: 0, saida: 0 }
+    if (t.tipo === 'entrada') porCategoria[cat].entrada += Number(t.valor)
+    else porCategoria[cat].saida += Number(t.valor)
+  })
+
+  return {
+    negocio: {
+      entrou: entrouNegocio,
+      saiu: saiuNegocio,
+      lucro: entrouNegocio - saiuNegocio,
+    },
+    pessoal: {
+      entrou: entrouPessoal,
+      saiu: saiuPessoal,
+      liquido: entrouPessoal - saiuPessoal,
+    },
+    sobrouDeVerdade: entrouNegocio - saiuNegocio + entrouPessoal - saiuPessoal,
+    porCategoria,
+  }
+}
+
+export async function RelatorioContent() {
+  const dados = await buscarRelatorio()
+
+  if (!dados) {
+    return <p className="text-red-600">Erro ao carregar relatório.</p>
+  }
+
+  const mesAtual = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+
+  return (
+    <div className="min-h-screen bg-zinc-50 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-900">
+            ← Voltar ao dashboard
+          </Link>
+        </div>
+
+        <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-900 mb-2">Relatório Mensal</h1>
+            <p className="text-zinc-500 text-sm capitalize">{mesAtual}</p>
+          </div>
+          <ExportarCSV dados={dados} mes={mesAtual} />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-lg border border-zinc-200 p-4">
+            <p className="text-xs text-zinc-500 uppercase tracking-wide">Lucro do negócio</p>
+            <p
+              className={`text-2xl font-bold mt-1 ${
+                dados.negocio.lucro >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {formatarMoeda(dados.negocio.lucro)}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg border border-zinc-200 p-4">
+            <p className="text-xs text-zinc-500 uppercase tracking-wide">Pessoal líquido</p>
+            <p
+              className={`text-2xl font-bold mt-1 ${
+                dados.pessoal.liquido >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {formatarMoeda(dados.pessoal.liquido)}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg border border-zinc-200 p-4">
+            <p className="text-xs text-zinc-500 uppercase tracking-wide">Sobrou de verdade</p>
+            <p
+              className={`text-2xl font-bold mt-1 ${
+                dados.sobrouDeVerdade >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {formatarMoeda(dados.sobrouDeVerdade)}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-zinc-200 p-6">
+          <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
+            Por categoria (negócio)
+          </p>
+          {Object.keys(dados.porCategoria).length === 0 ? (
+            <p className="text-sm text-zinc-500 text-center py-6">
+              Nenhuma transação de negócio registrada neste mês.
+            </p>
+          ) : (
+            <ul className="divide-y divide-zinc-100">
+              {Object.entries(dados.porCategoria).map(([cat, valores]) => {
+                const saldo = valores.entrada - valores.saida
+                return (
+                  <li key={cat} className="py-3 flex items-center justify-between">
+                    <span className="text-sm font-medium text-zinc-900">{cat}</span>
+                    <span
+                      className={`text-sm font-semibold ${
+                        saldo >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
+                      {formatarMoeda(saldo)}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
