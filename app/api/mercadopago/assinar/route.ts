@@ -29,7 +29,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Busca o tenant do usuário
     const { data: profile } = await supabase
       .from('users')
       .select('tenant_id')
@@ -40,7 +39,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tenant não encontrado' }, { status: 404 })
     }
 
-    // Cria a assinatura no Mercado Pago
     const response = await fetch('https://api.mercadopago.com/preapproval', {
       method: 'POST',
       headers: {
@@ -51,7 +49,7 @@ export async function POST(request: Request) {
         preapproval_plan_id,
         reason: 'Daily Profit - Plano Pro',
         external_reference: profile.tenant_id,
-        payer_email: payer_email || 'test_user_8813910146543731310@testuser.com',
+        payer_email: payer_email || user.email,
         card_token_id,
         back_url: `${appUrl}/dashboard`,
         status: 'authorized',
@@ -68,13 +66,12 @@ export async function POST(request: Request) {
       )
     }
 
-    console.log('✅ Assinatura criada no MP:', {
+    console.log('✅ Assinatura criada:', {
       id: data.id,
       status: data.status,
       external_reference: data.external_reference,
     })
 
-    // Salva a assinatura no banco
     const { error: upsertError } = await supabase
       .from('subscriptions')
       .upsert(
@@ -88,34 +85,26 @@ export async function POST(request: Request) {
       )
 
     if (upsertError) {
-      console.error('❌ Erro ao salvar assinatura no banco:', JSON.stringify(upsertError, null, 2))
+      console.error('❌ Erro ao salvar assinatura:', JSON.stringify(upsertError, null, 2))
       return NextResponse.json(
         { error: 'Erro ao salvar assinatura no banco', detalhes: upsertError },
         { status: 500 }
       )
     }
 
-    console.log('✅ Assinatura salva no banco:', {
-      tenant_id: profile.tenant_id,
-      mp_preapproval_id: data.id,
-      status: data.status,
-    })
-
-    // Atualiza o plano do tenant imediatamente (não espera webhook)
     const { error: tenantError } = await supabase
       .from('tenants')
       .update({ plano: 'pro' })
       .eq('id', profile.tenant_id)
 
     if (tenantError) {
-      console.error('⚠️ Erro ao atualizar tenant (não bloqueante):', tenantError)
-    } else {
-      console.log('✅ Tenant atualizado para PRO:', profile.tenant_id)
+      console.error('⚠️ Erro ao atualizar tenant:', tenantError)
     }
+
+    console.log('✅ Assinatura salva e tenant atualizado para PRO')
 
     return NextResponse.json({
       preapproval_id: data.id,
-      init_point: data.init_point,
       status: data.status,
     })
   } catch (error) {

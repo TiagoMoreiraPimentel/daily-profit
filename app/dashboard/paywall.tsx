@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react'
 import { Button } from '@/components/ui/button'
 
@@ -64,7 +63,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
     try {
       const data = await processarAssinatura(
         formData.token,
-        formData.payer?.email || 'pagador@teste.com'
+        formData.payer?.email // E-mail real digitado pelo usuário
       )
 
       console.log('Resposta da assinatura:', data)

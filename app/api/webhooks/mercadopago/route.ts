@@ -24,21 +24,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true })
     }
 
-    if (type === 'subscription_preapproval' || type === 'preapproval') {
-      await tratarAssinatura(data.id, supabaseAdmin)
-    }
+    try {
+      if (type === 'subscription_preapproval' || type === 'preapproval') {
+        await tratarAssinatura(data.id, supabaseAdmin)
+      }
 
-    if (
-      type === 'subscription_authorized_payment' ||
-      type === 'authorized_payment'
-    ) {
-      await tratarPagamentoAutorizado(data.id, supabaseAdmin)
+      if (
+        type === 'subscription_authorized_payment' ||
+        type === 'authorized_payment'
+      ) {
+        await tratarPagamentoAutorizado(data.id, supabaseAdmin)
+      }
+    } catch (innerError) {
+      console.error('⚠️ Erro ao processar (ignorado):', innerError)
     }
 
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('❌ Erro no webhook:', error)
-    return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
+    return NextResponse.json({ received: true })
   }
 }
 

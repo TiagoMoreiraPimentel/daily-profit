@@ -38,7 +38,7 @@ export async function POST() {
             frequency: 1,
             frequency_type: 'months',
           },
-          transaction_amount: 19.9,
+          transaction_amount: 1.0,
           currency_id: 'BRL',
         },
         payment_methods_allowed: {
@@ -52,12 +52,14 @@ export async function POST() {
     const data = await response.json()
 
     if (!response.ok) {
-      console.error('Erro ao criar plano:', data)
+      console.error('❌ Erro ao criar plano:', data)
       return NextResponse.json(
         { error: data.message || 'Erro ao criar plano', detalhes: data },
         { status: response.status }
       )
     }
+
+    console.log('✅ Plano criado:', data.id)
 
     return NextResponse.json({
       preapproval_plan_id: data.id,
@@ -65,7 +67,7 @@ export async function POST() {
       status: data.status,
     })
   } catch (error) {
-    console.error('Erro inesperado:', error)
+    console.error('❌ Erro inesperado:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
