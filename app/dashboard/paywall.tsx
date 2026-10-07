@@ -64,7 +64,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
     try {
       const data = await processarAssinatura(
         formData.token,
-        formData.payer?.email || 'test_user_8813910146543731310@testuser.com'
+        'test@testuser.com' // E-mail fixo de teste exigido pelo Mercado Pago
       )
 
       console.log('Resposta da assinatura:', data)
@@ -79,7 +79,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
           console.error('Erro ao sincronizar:', e)
         }
 
-        // Redireciona após 2 segundos usando window.location (mais confiável)
+        // Redireciona após 2 segundos
         setTimeout(() => {
           window.location.href = '/dashboard'
         }, 2000)
