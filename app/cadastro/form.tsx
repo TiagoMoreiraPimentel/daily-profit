@@ -63,6 +63,17 @@ export function CadastroForm() {
     }
 
     if (data.session) {
+      // Envia e-mail de boas-vindas (não bloqueia o cadastro se falhar)
+      fetch('/api/emails/boas-vindas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.user?.email,
+          nome: data.user?.user_metadata?.nome || data.user?.email?.split('@')[0],
+          nomeNegocio: data.user?.user_metadata?.nome_negocio || 'seu negócio',
+        }),
+      }).catch((e) => console.error('Erro ao enviar boas-vindas:', e))
+
       router.push('/dashboard')
       router.refresh()
     }
