@@ -34,7 +34,6 @@ async function processarAssinatura(cardTokenId: string, payerEmail: string) {
 }
 
 export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
-  const router = useRouter()
   const [erro, setErro] = useState<string | null>(null)
   const [processando, setProcessando] = useState(false)
   const [sdkPronto, setSdkPronto] = useState(false)
@@ -80,10 +79,9 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
           console.error('Erro ao sincronizar:', e)
         }
 
-        // Aguarda 2 segundos para o usuário ver a mensagem
+        // Redireciona após 2 segundos usando window.location (mais confiável)
         setTimeout(() => {
-          router.push('/dashboard')
-          router.refresh()
+          window.location.href = '/dashboard'
         }, 2000)
       } else {
         setErro('Assinatura criada com status: ' + data.status)
@@ -115,6 +113,12 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
         {sucesso && (
           <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded mb-4">
             ✅ Assinatura criada com sucesso! Ativando seu plano...
+            <button
+              onClick={() => (window.location.href = '/dashboard')}
+              className="block mt-2 text-green-800 underline text-xs"
+            >
+              Ir para o dashboard agora
+            </button>
           </div>
         )}
 
