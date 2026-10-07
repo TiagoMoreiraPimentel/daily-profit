@@ -1,20 +1,19 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// Cliente com service_role (ignora RLS — só use no backend)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-)
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 export async function POST(request: Request) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    )
+
     const body = await request.json()
     console.log('🔔 Webhook recebido:', JSON.stringify(body, null, 2))
 
@@ -25,20 +24,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true })
     }
 
-    // Trata eventos de assinatura (preapproval)
-    if (
-      type === 'subscription_preapproval' ||
-      type === 'preapproval'
-    ) {
-      await tratarAssinatura(data.id)
+    if (type === 'subscription_preapproval' || type === 'preapproval') {
+      await tratarAssinatura(data.id, supabaseAdmin)
     }
 
-    // Trata eventos de cobrança recorrente
     if (
       type === 'subscription_authorized_payment' ||
       type === 'authorized_payment'
     ) {
-      await tratarPagamentoAutorizado(data.id)
+      await tratarPagamentoAutorizado(data.id, supabaseAdmin)
     }
 
     return NextResponse.json({ received: true })
@@ -48,16 +42,16 @@ export async function POST(request: Request) {
   }
 }
 
-async function tratarAssinatura(preapprovalId: string) {
+async function tratarAssinatura(
+  preapprovalId: string,
+  supabaseAdmin: SupabaseClient
+) {
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
 
-  // Busca os dados atualizados da assinatura no Mercado Pago
   const res = await fetch(
     `https://api.mercadopago.com/preapproval/${preapprovalId}`,
     {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     }
   )
 
@@ -80,13 +74,12 @@ async function tratarAssinatura(preapprovalId: string) {
     return
   }
 
-  const status = assinatura.status // 'pending', 'authorized', 'paused', 'cancelled'
+  const status = assinatura.status
   const plano = status === 'authorized' ? 'pro' : 'free'
   const proximaCobranca = assinatura.next_payment_date
     ? assinatura.next_payment_date.split('T')[0]
     : null
 
-  // Atualiza a tabela subscriptions
   await supabaseAdmin.from('subscriptions').upsert(
     {
       tenant_id: tenantId,
@@ -98,24 +91,24 @@ async function tratarAssinatura(preapprovalId: string) {
     { onConflict: 'tenant_id' }
   )
 
-  // Atualiza o plano do tenant
   await supabaseAdmin
     .from('tenants')
     .update({ plano })
     .eq('id', tenantId)
 
-  console.log(`✅ Tenant ${tenantId} atualizado para plano "${plano}" (status: ${status})`)
+  console.log(`✅ Tenant ${tenantId} → plano "${plano}" (status: ${status})`)
 }
 
-async function tratarPagamentoAutorizado(paymentId: string) {
+async function tratarPagamentoAutorizado(
+  paymentId: string,
+  supabaseAdmin: SupabaseClient
+) {
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
 
   const res = await fetch(
     `https://api.mercadopago.com/authorized_payments/${paymentId}`,
     {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     }
   )
 
@@ -131,9 +124,7 @@ async function tratarPagamentoAutorizado(paymentId: string) {
     preapproval_id: pagamento.preapproval_id,
   })
 
-  // Quando o pagamento é aprovado, garante que o tenant é pro
   if (pagamento.status === 'approved' && pagamento.preapproval_id) {
-    // Busca a assinatura para pegar o external_reference
     const assinaturaRes = await fetch(
       `https://api.mercadopago.com/preapproval/${pagamento.preapproval_id}`,
       {
