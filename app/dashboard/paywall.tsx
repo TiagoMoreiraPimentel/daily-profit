@@ -63,7 +63,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
     try {
       const data = await processarAssinatura(
         formData.token,
-        formData.payer?.email // E-mail real digitado pelo usuário
+        formData.payer?.email
       )
 
       console.log('Resposta da assinatura:', data)
@@ -95,7 +95,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-zinc-900 mb-2">
-          Assinar Plano Pro — R$ 19,90/mês
+          Assinar Plano Pro — R$ 1,00/mês
         </h2>
         <p className="text-sm text-zinc-600 mb-4">
           Preencha os dados do cartão para ativar sua assinatura.
@@ -133,7 +133,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
           </div>
         ) : (
           <Payment
-            initialization={{ amount: 19.9 }}
+            initialization={{ amount: 1.0 }}
             customization={{
               paymentMethods: {
                 creditCard: 'all',
@@ -190,7 +190,7 @@ export function BannerLimite({
           </p>
         </div>
         <Button size="sm" onClick={() => setMostrarModal(true)}>
-          Assinar Pro — R$ 19,90/mês
+          Assinar Pro — R$ 1,00/mês
         </Button>
       </div>
 
