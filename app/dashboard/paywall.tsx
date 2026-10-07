@@ -64,7 +64,7 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
     try {
       const data = await processarAssinatura(
         formData.token,
-        formData.payer?.email || 'test_user_8813910146543731310@testuser.com'
+        formData.payer?.email || 'pagador@teste.com'
       )
 
       console.log('Resposta da assinatura:', data)
@@ -72,14 +72,12 @@ export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
       if (data.status === 'authorized' || data.status === 'pending') {
         setSucesso(true)
 
-        // Tenta sincronizar o status imediatamente
         try {
           await fetch('/api/mercadopago/sincronizar', { method: 'POST' })
         } catch (e) {
           console.error('Erro ao sincronizar:', e)
         }
 
-        // Redireciona após 2 segundos
         setTimeout(() => {
           window.location.href = '/dashboard'
         }, 2000)
