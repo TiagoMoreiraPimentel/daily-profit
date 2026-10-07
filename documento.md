@@ -23,7 +23,7 @@ DECISÕES TRAVADAS:
 - Preço Pro em produção: R$ 19,90/mês
 - Preço em TESTE (atual): R$ 1,00/mês (manter até concluir teste)
 - Plano Free: 30 transações/mês + lucro do dia + separação pessoal/negócio
-- Plano Pro: ilimitado + previsão de caixa + link de cobrança + relatórios
+- Plano Pro: ilimitado + previsão de caixa + relatório + link de cobrança
 - Autenticação: Supabase Auth nativo
 - RLS: obrigatório em todas as tabelas com tenant_id
 - tenant_id no JWT: NÃO — recurso bloqueado no plano Free
@@ -113,13 +113,15 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] Supabase Realtime na tela de lucro (atualização automática)
 [x] Badge de plano (Free/Pro) ao lado do nome
 [x] Hora nas transações (fuso America/Sao_Paulo)
-[ ] Edição e exclusão de transação  [ADIADO — não é crítico para MVP]
+[x] Excluir transações do dashboard  [NOVO]
+[ ] Edição de transações  [ADIADO — não é crítico para MVP]
 [ ] Filtro por data  [ADIADO — não é crítico para MVP]
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
 [x] Banner suave ao atingir 80% do limite
 [x] Modal de bloqueio ao atingir 100%
+[x] Botão "Assinar Pro" sempre visível no dashboard  [NOVO]
 [ ] Email pós-valor (7 dias de uso)  [ADIADO — sem domínio/email]
 
 FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
@@ -135,7 +137,7 @@ FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
 [x] Proxy exclui /api/* do matcher (webhook não passa por auth)
 [x] Migrar para credenciais de PRODUÇÃO
 [x] Preço reduzido para R$ 1,00 para teste
-[ ] Testar assinatura real com cartão real (R$ 1,00)
+[ ] Testar assinatura real com cartão real (R$ 1,00)  [PENDENTE]
 [ ] Verificar atualização automática do tenant para "pro" via webhook
 [ ] Reverter preço para R$ 19,90 após o teste
 
@@ -149,7 +151,7 @@ FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 [x] F5: Previsão de caixa (média + tendência + recorrentes)
 [x] Tela de cadastro de contas recorrentes (/pro/recorrentes)
 [x] F6: Relatório mensal de lucro (com exportação CSV)
-[x] Gráfico de evolução dos últimos 6 meses (F7)
+[x] F7: Gráfico de evolução dos últimos 6 meses
 [ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
 
 FASE 8 — Landing Page + SEO
@@ -198,19 +200,24 @@ ESTADO ATUAL:
   * FASE 2: auth completo (cadastro, login, recuperação, logout, proxy,
     trigger handle_new_user recriado, usuários órfãos corrigidos)
   * FASE 3: dashboard completo (cards, form, lista com hora, realtime,
-    badge de plano)
-  * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao)
+    badge de plano, excluir transação)
+  * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao) +
+    botão Assinar Pro sempre visível
   * FASE 5: Mercado Pago em produção (plano, assinatura via Brick,
     webhook testado); preço em R$ 1,00 para teste
   * FASE 7: previsão de caixa (média + tendência + recorrentes),
     tela de recorrentes, relatório mensal, gráfico de evolução
   * Resend REMOVIDO (sem domínio ainda)
   * Deploy ativo em https://daily-profit-theta.vercel.app
+  * Commit + push feitos
 - Última decisão: preço R$ 1,00 para teste em produção
 - Pendências conhecidas:
   * Rate limit de 2 e-mails/hora do Supabase Free (resolve com domínio)
   * Teste real de assinatura R$ 1,00 pendente
-- Próximo passo: Landing Page + SEO (Fase 8)
+  * Landing Page + SEO ainda não iniciada
+- Próximo passo: A DEFINIR com o usuário
+  (opções: Landing Page, Link de Cobrança, Teste de assinatura,
+   Edição de transações, ou outro)
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 

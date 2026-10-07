@@ -40,5 +40,15 @@ async function RecorrentesWrapper() {
     )
   }
 
-  return <RecorrentesContent />
+  const { data: profile } = await supabase
+    .from('users')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.tenant_id) {
+    return <p className="text-red-600">Erro: perfil sem tenant.</p>
+  }
+
+  return <RecorrentesContent tenantId={profile.tenant_id} />
 }

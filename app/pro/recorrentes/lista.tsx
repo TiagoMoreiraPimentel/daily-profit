@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useImperativeHandle, forwardRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,10 @@ type Recorrente = {
   ativo: boolean
 }
 
+export type RecorrentesListaHandle = {
+  recarregar: () => void
+}
+
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -21,7 +25,10 @@ function formatarMoeda(valor: number) {
   }).format(valor)
 }
 
-export function RecorrentesLista({ tenantId }: { tenantId: string }) {
+export const RecorrentesLista = forwardRef<
+  RecorrentesListaHandle,
+  { tenantId: string }
+>(function RecorrentesLista({ tenantId }, ref) {
   const router = useRouter()
   const supabase = createClient()
   const [recorrentes, setRecorrentes] = useState<Recorrente[]>([])
@@ -38,6 +45,11 @@ export function RecorrentesLista({ tenantId }: { tenantId: string }) {
     if (!error) setRecorrentes(data ?? [])
     setLoading(false)
   }
+
+  // Expõe o método "recarregar" para o componente pai
+  useImperativeHandle(ref, () => ({
+    recarregar: carregar,
+  }))
 
   useEffect(() => {
     carregar()
@@ -112,4 +124,4 @@ export function RecorrentesLista({ tenantId }: { tenantId: string }) {
       ))}
     </ul>
   )
-}
+})

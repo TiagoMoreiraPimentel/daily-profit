@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export function RecorrentesForm({ tenantId }: { tenantId: string }) {
+export function RecorrentesForm({
+  tenantId,
+  onSucesso,
+}: {
+  tenantId: string
+  onSucesso?: () => void
+}) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -68,7 +74,12 @@ export function RecorrentesForm({ tenantId }: { tenantId: string }) {
     setSucesso(true)
     setLoading(false)
 
+    // Notifica a lista para recarregar
+    onSucesso?.()
+
+    // Também dispara o refresh do Next.js (para outros componentes)
     router.refresh()
+
     setTimeout(() => setSucesso(false), 2000)
   }
 

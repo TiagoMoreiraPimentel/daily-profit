@@ -1,20 +1,14 @@
-import { createClient } from '@/lib/supabase-server'
+'use client'
+
+import { useRef } from 'react'
 import { RecorrentesForm } from './form'
-import { RecorrentesLista } from './lista'
+import { RecorrentesLista, type RecorrentesListaHandle } from './lista'
 
-export async function RecorrentesContent() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+export function RecorrentesContent({ tenantId }: { tenantId: string }) {
+  const listaRef = useRef<RecorrentesListaHandle>(null)
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('tenant_id')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile?.tenant_id) {
-    return <p className="text-red-600">Erro: perfil sem tenant.</p>
+  function handleSucesso() {
+    listaRef.current?.recarregar()
   }
 
   return (
@@ -42,14 +36,14 @@ export async function RecorrentesContent() {
             <h2 className="text-lg font-semibold text-zinc-900 mb-4">
               Cadastrar nova
             </h2>
-            <RecorrentesForm tenantId={profile.tenant_id} />
+            <RecorrentesForm tenantId={tenantId} onSucesso={handleSucesso} />
           </div>
 
           <div className="bg-white rounded-lg border border-zinc-200 p-6">
             <h2 className="text-lg font-semibold text-zinc-900 mb-4">
               Cadastradas
             </h2>
-            <RecorrentesLista tenantId={profile.tenant_id} />
+            <RecorrentesLista ref={listaRef} tenantId={tenantId} />
           </div>
         </div>
       </div>
