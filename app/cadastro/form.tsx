@@ -61,7 +61,6 @@ export function CadastroForm() {
       setSucesso(
         'Conta criada! Verifique seu email para confirmar o cadastro antes de fazer login.'
       )
-      // Limpa os campos
       setEmail('')
       setSenha('')
       setNomeNegocio('')
@@ -72,18 +71,6 @@ export function CadastroForm() {
 
     // Se já tem sessão (email confirmado automaticamente)
     if (data.session) {
-      // Envia e-mail de boas-vindas (não bloqueia se falhar)
-      fetch('/api/emails/boas-vindas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.user?.email,
-          nome: data.user?.user_metadata?.nome || data.user?.email?.split('@')[0],
-          nomeNegocio: data.user?.user_metadata?.nome_negocio || 'seu negócio',
-        }),
-      }).catch((e) => console.error('Erro ao enviar boas-vindas:', e))
-
-      // Limpa os campos
       setEmail('')
       setSenha('')
       setNomeNegocio('')
