@@ -27,7 +27,7 @@ async function DashboardContent() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('nome, tenant_id, tenants(nome_negocio)')
+    .select('nome, tenant_id, tenants(nome_negocio, plano)')
     .eq('id', user.id)
     .single()
 
@@ -35,7 +35,8 @@ async function DashboardContent() {
     return <p className="text-red-600">Erro: perfil sem tenant associado.</p>
   }
 
-  const nomeNegocio = (profile?.tenants as { nome_negocio?: string } | null)?.nome_negocio
+  const nomeNegocio = (profile?.tenants as { nome_negocio?: string; plano?: string } | null)?.nome_negocio
+  const plano = (profile?.tenants as { nome_negocio?: string; plano?: string } | null)?.plano ?? 'free'
 
   const [hoje, mes, statusPlano] = await Promise.all([
     getResumoHoje(),
@@ -61,7 +62,18 @@ async function DashboardContent() {
           <h1 className="text-2xl font-bold text-zinc-900">
             Olá, {profile?.nome || 'usuário'} 👋
           </h1>
-          <p className="text-zinc-500 mt-1 text-sm">{nomeNegocio}</p>
+          <p className="text-zinc-500 mt-1 text-sm flex items-center gap-2">
+            {nomeNegocio}
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                plano === 'pro'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-zinc-100 text-zinc-600'
+              }`}
+            >
+              {plano === 'pro' ? '⭐ Pro' : 'Free'}
+            </span>
+          </p>
         </div>
         <LogoutButton />
       </div>

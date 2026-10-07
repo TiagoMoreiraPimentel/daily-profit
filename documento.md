@@ -18,9 +18,10 @@ DECISÕES TRAVADAS:
 - Multi-tenant: shared schema com tenant_id + RLS no Supabase
 - Banco + Auth + Realtime: Supabase
 - Frontend: Next.js 16 + Tailwind v4 + TypeScript
-- Hospedagem front: Vercel (free) — AINDA NÃO CONFIGURADO
+- Hospedagem front: Vercel (free) — CONFIGURADO
 - Email transacional: Resend (free) — ainda não configurado
-- Preço Pro: R$ 19,90/mês
+- Preço Pro em produção: R$ 19,90/mês
+- Preço em TESTE (atual): R$ 1,00/mês  [ATUALIZADO]
 - Plano Free: 30 transações/mês + lucro do dia + separação pessoal/negócio
 - Plano Pro: ilimitado + previsão de caixa + link de cobrança + relatórios
 - Autenticação: Supabase Auth nativo
@@ -32,10 +33,10 @@ DECISÕES TRAVADAS:
 - Middleware: renomeado para proxy.ts (Next.js 16)
 - Proxy: rotas /api/* excluídas do matcher (webhook não passa por auth)
 - Suspense obrigatório em páginas dinâmicas (Cache Components do Next.js 16)
-- Mercado Pago: conta de teste (token APP_USR- da conta vendedora de teste)
-- Fluxo de assinatura: Checkout Bricks (Payment Brick) no frontend
+- Mercado Pago: Checkout Bricks (Payment Brick) no frontend
   gera card_token_id → backend cria /preapproval com status authorized
-- Webhook: configurado no painel MP com URL do ngrok durante testes
+- Mercado Pago: produção (não mais sandbox)  [ATUALIZADO]
+- Webhook: configurado no painel MP com URL da Vercel
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
@@ -59,10 +60,9 @@ FASE 0 — Fundação (antes de codar)
 [ ] Comprar domínio (adiado)
 [x] Criar conta Supabase
 [x] Criar conta Mercado Pago Developers
-[ ] Criar conta Vercel
-[ ] Criar conta Resend
+[x] Criar conta Vercel  [ATUALIZADO]
 [x] Criar repositório Git local
-[ ] Criar repositório remoto (GitHub)
+[x] Criar repositório remoto (GitHub)  [ATUALIZADO]
 
 FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar projeto no Supabase — região South America (São Paulo)
@@ -112,10 +112,10 @@ FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Modal de bloqueio ao atingir 100%
 [ ] Email pós-valor (7 dias de uso)  [PENDENTE — depende de Resend]
 
-FASE 5 — Mercado Pago  [CONCLUÍDA — parcial]
+FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
 [x] Criar conta Mercado Pago Developers
-[x] Criar aplicação no painel (Sandbox)
-[x] Configurar variáveis de ambiente (.env)
+[x] Criar aplicação no painel
+[x] Configurar variáveis de ambiente (.env + Vercel)
 [x] Implementar /preapproval_plan (criar plano Pro)
 [x] Implementar /preapproval (assinar plano com card_token_id)
 [x] Payment Brick (Checkout Bricks) no frontend para tokenizar cartão
@@ -123,9 +123,11 @@ FASE 5 — Mercado Pago  [CONCLUÍDA — parcial]
 [x] Tratar status: authorized, paused, cancelled, pending
 [x] Bloquear/liberar funções Pro conforme status
 [x] Proxy exclui /api/* do matcher (webhook não passa por auth)
-[ ] Testar assinatura real completa com cartão de teste APRO
+[x] Migrar para credenciais de PRODUÇÃO  [ATUALIZADO]
+[x] Preço reduzido para R$ 1,00 para teste  [ATUALIZADO]
+[ ] Testar assinatura real com cartão real (R$ 1,00)
 [ ] Verificar atualização automática do tenant para "pro" via webhook
-[ ] Deploy na Vercel (para webhook ter URL fixa)
+[ ] Reverter preço para R$ 19,90 após o teste
 
 FASE 6 — Link de Cobrança (F4)
 [ ] Criar preferência de pagamento no Mercado Pago
@@ -177,20 +179,19 @@ FORMATO DE RESPOSTA PADRÃO:
 - Próximo passo sugerido (1-2 linhas)
 
 ESTADO ATUAL:
-- Fase: 5 (Mercado Pago) — CONCLUÍDA (parcial)
+- Fase: 5 (Mercado Pago) — EM ANDAMENTO (produção)
 - Concluído até agora:
-  * FASE 0: conta Supabase + conta Mercado Pago Developers criadas
+  * FASE 0: Supabase + Mercado Pago + Vercel + repositório GitHub
   * FASE 1: banco completo (tabelas, RLS, funções, view, triggers, seed)
-  * FASE 2: auth completo (cadastro, login, recuperação de senha, logout,
-    proxy de proteção, mensagens em português)
-  * FASE 3: dashboard completo (cards negócio + pessoal, form de transação,
-    lista separada por natureza, realtime, resumo do mês)
-  * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao),
-    banner 80%, modal 100%
-  * FASE 5: Mercado Pago integrado (plano, assinatura via Payment Brick,
-    webhook testado com 200 OK)
-- Última decisão: nome provisório "Daily Profit", preço R$ 19,90
-- Próximo passo: deploy na Vercel (para URL fixa e teste real de assinatura)
+  * FASE 2: auth completo (cadastro, login, recuperação, logout, proxy)
+  * FASE 3: dashboard completo (cards, form, lista, realtime, resumo)
+  * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao)
+  * FASE 5: Mercado Pago em produção (plano, assinatura via Brick,
+    webhook testado); preço em R$ 1,00 para teste
+  * Deploy ativo em https://daily-profit-theta.vercel.app
+- Última decisão: preço R$ 1,00 para teste em produção
+- Próximo passo: testar assinatura real com cartão real (R$ 1,00) e
+  verificar se o tenant vira "pro" automaticamente
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 
@@ -201,10 +202,9 @@ Guardar tudo em gerenciador de senhas (Bitwarden, 1Password, etc.).
 - Supabase anon public key: [guardada no .env — é pública]
 - Supabase service_role key: [guardada no .env e gerenciador de senhas]
 - Supabase DB password: [guardada no gerenciador de senhas]
-- Mercado Pago Access Token (conta vendedora de teste): [guardada no .env]
-- Mercado Pago Public Key (conta vendedora de teste): [guardada no .env]
-- Mercado Pago e-mail comprador de teste:
-  test_user_8813910146543731310@testuser.com
+- Vercel URL de produção: https://daily-profit-theta.vercel.app
+- Mercado Pago Access Token (produção): [guardada no .env e Vercel]
+- Mercado Pago Public Key (produção): [guardada no .env e Vercel]
 - Resend API key: [a definir — Fase 8]
 - Domínio: [a definir]
 

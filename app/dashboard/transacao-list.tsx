@@ -7,6 +7,14 @@ function formatarMoeda(valor: number) {
   }).format(valor)
 }
 
+function formatarHora(dataISO: string) {
+  const data = new Date(dataISO)
+  return data.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export async function TransacaoList() {
   const transacoes = await getTransacoesHoje()
 
@@ -35,6 +43,9 @@ export async function TransacaoList() {
                   <p className="text-sm font-medium text-zinc-900">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
+                  <p className="text-xs text-zinc-400">
+                    {formatarHora(t.criado_em)}
+                  </p>
                 </div>
                 <span
                   className={`text-sm font-semibold ${
@@ -60,6 +71,9 @@ export async function TransacaoList() {
                 <div className="flex-1">
                   <p className="text-sm text-zinc-600">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
+                  </p>
+                  <p className="text-xs text-zinc-400">
+                    {formatarHora(t.criado_em)}
                   </p>
                 </div>
                 <span className="text-sm text-zinc-500">
