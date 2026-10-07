@@ -40,6 +40,7 @@ async function buscarPrevisao() {
     transacoes
       ?.filter((t) => t.tipo === 'entrada' && t.natureza === 'negocio')
       .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+
   const saidasMes =
     transacoes
       ?.filter((t) => t.tipo === 'saida' && t.natureza === 'negocio')
@@ -49,14 +50,22 @@ async function buscarPrevisao() {
     recorrentes
       ?.filter((r) => r.tipo === 'entrada')
       .reduce((acc, r) => acc + Number(r.valor), 0) ?? 0
+
   const saidasRec =
     recorrentes
       ?.filter((r) => r.tipo === 'saida')
       .reduce((acc, r) => acc + Number(r.valor), 0) ?? 0
 
   return {
-    realizado: { entradas: entradasMes, saidas: saidasMes, lucro: entradasMes - saidasMes },
-    previsto: { entradas: entradasRec, saidas: saidasRec },
+    realizado: {
+      entradas: entradasMes,
+      saidas: saidasMes,
+      lucro: entradasMes - saidasMes,
+    },
+    previsto: {
+      entradas: entradasRec,
+      saidas: saidasRec,
+    },
     projecao: {
       entradas: entradasMes + entradasRec,
       saidas: saidasMes + saidasRec,
@@ -82,9 +91,7 @@ export async function PrevisaoContent() {
           </Link>
         </div>
 
-        <h1 className="text-2xl font-bold text-zinc-900 mb-2">
-          Previsão de Caixa
-        </h1>
+        <h1 className="text-2xl font-bold text-zinc-900 mb-2">Previsão de Caixa</h1>
         <p className="text-zinc-500 text-sm mb-8">
           Projeção do mês com base no que já aconteceu + contas recorrentes
         </p>
@@ -177,8 +184,8 @@ export async function PrevisaoContent() {
 
         {dados.recorrentes.length === 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-            💡 Cadastre suas contas recorrentes (aluguel, assinaturas, mensalidades) para
-            que a previsão fique mais precisa.
+            💡 Cadastre suas contas recorrentes (aluguel, assinaturas, mensalidades)
+            para que a previsão fique mais precisa.
           </div>
         )}
       </div>

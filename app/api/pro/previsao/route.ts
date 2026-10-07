@@ -25,14 +25,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Recurso exclusivo do plano Pro' }, { status: 403 })
     }
 
-    // Busca transações recorrentes ativas
     const { data: recorrentes } = await supabase
       .from('recurring')
       .select('*')
       .eq('tenant_id', profile.tenant_id)
       .eq('ativo', true)
 
-    // Busca transações do mês atual
     const primeiroDiaMes = new Date()
     primeiroDiaMes.setDate(1)
     const dataInicio = primeiroDiaMes.toISOString().split('T')[0]
@@ -62,12 +60,6 @@ export async function GET() {
         ?.filter((r) => r.tipo === 'saida')
         .reduce((acc, r) => acc + Number(r.valor), 0) ?? 0
 
-    // Projeção para o fim do mês:
-    // O que já entrou/saiu + o que ainda vai entrar/sair (recorrentes)
-    const projecaoEntradas = entradasMes + entradasRecorrentes
-    const projecaoSaidas = saidasMes + saidasRecorrentes
-    const projecaoLucro = projecaoEntradas - projecaoSaidas
-
     return NextResponse.json({
       realizado: {
         entradas: entradasMes,
@@ -79,9 +71,9 @@ export async function GET() {
         saidas: saidasRecorrentes,
       },
       projecao: {
-        entradas: projecaoEntradas,
-        saidas: projecaoSaidas,
-        lucro: projecaoLucro,
+        entradas: entradasMes + entradasRecorrentes,
+        saidas: saidasMes + saidasRecorrentes,
+        lucro: entradasMes + entradasRecorrentes - (saidasMes + saidasRecorrentes),
       },
       recorrentes: recorrentes ?? [],
     })

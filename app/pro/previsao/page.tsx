@@ -8,7 +8,13 @@ import { PrevisaoContent } from './content'
 
 export default function PrevisaoPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-50 p-8 text-center text-sm text-zinc-500">Carregando...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-50 p-8 text-center text-sm text-zinc-500">
+          Carregando...
+        </div>
+      }
+    >
       <PrevisaoWrapper />
     </Suspense>
   )
