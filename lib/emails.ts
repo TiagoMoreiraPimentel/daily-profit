@@ -1,4 +1,4 @@
-import { resend } from './resend'
+import { getResend } from './resend'
 
 export async function enviarBoasVindas({
   para,
@@ -10,8 +10,10 @@ export async function enviarBoasVindas({
   nomeNegocio: string
 }) {
   try {
+    const resend = getResend()
+
     const { data, error } = await resend.emails.send({
-      from: 'Daily Profit <onboarding@resend.dev>', // Troque quando tiver domínio
+      from: 'Daily Profit <onboarding@resend.dev>',
       to: [para],
       subject: 'Bem-vindo ao Daily Profit 🚀',
       html: `
