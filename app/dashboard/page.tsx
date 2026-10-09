@@ -13,6 +13,7 @@ import { AssinarButton } from './assinar-button'
 import { DateNavigator } from './date-navigator'
 import { BotoesTransacao } from './botoes-transacao'
 import { AssinaturaInfo } from './assinatura-info'
+import { WhatsAppButton } from '@/components/whatsapp-button'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -235,6 +236,9 @@ async function DashboardContent({
         tenantId={profile.tenant_id}
         dataSelecionada={dataSelecionada}
       />
+
+      {/* WhatsApp flutuante (esquerda, para não conflitar com os FABs) */}
+      <WhatsAppButton posicao="esquerda" tamanho="pequeno" />
     </div>
   )
 }

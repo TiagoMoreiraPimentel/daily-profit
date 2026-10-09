@@ -3,6 +3,7 @@
 import { useRef } from 'react'
 import { RecorrentesForm } from './form'
 import { RecorrentesLista, type RecorrentesListaHandle } from './lista'
+import { WhatsAppButton } from '@/components/whatsapp-button'
 
 export function RecorrentesContent({ tenantId }: { tenantId: string }) {
   const listaRef = useRef<RecorrentesListaHandle>(null)
@@ -47,6 +48,8 @@ export function RecorrentesContent({ tenantId }: { tenantId: string }) {
           </div>
         </div>
       </div>
+
+      <WhatsAppButton posicao="esquerda" tamanho="pequeno" />
     </div>
   )
 }

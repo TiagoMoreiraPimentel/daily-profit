@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
+import { WhatsAppButton } from '@/components/whatsapp-button'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -180,7 +181,6 @@ export async function PrevisaoContent() {
           </div>
         )}
 
-        {/* Previsão principal */}
         <div className="bg-white rounded-lg border border-zinc-200 p-6 mb-8">
           <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
             📈 Previsão para o próximo mês
@@ -211,14 +211,12 @@ export async function PrevisaoContent() {
           </div>
         </div>
 
-        {/* Como calculamos */}
         <div className="bg-white rounded-lg border border-zinc-200 p-6 mb-8">
           <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
             Como calculamos
           </p>
 
           <div className="space-y-6">
-            {/* Ritmo do mês atual */}
             <div>
               <p className="text-sm font-medium text-zinc-900 mb-2">
                 🚀 Ritmo do mês atual
@@ -253,7 +251,6 @@ export async function PrevisaoContent() {
               </div>
             </div>
 
-            {/* Média histórica */}
             <div>
               <p className="text-sm font-medium text-zinc-900 mb-2">
                 📊 Média dos últimos 3 meses
@@ -289,7 +286,6 @@ export async function PrevisaoContent() {
               </div>
             </div>
 
-            {/* Recorrentes */}
             <div>
               <p className="text-sm font-medium text-zinc-900 mb-2">
                 🔁 Contas recorrentes
@@ -317,7 +313,6 @@ export async function PrevisaoContent() {
           </div>
         </div>
 
-        {/* Resumo do mês atual */}
         <div className="bg-white rounded-lg border border-zinc-200 p-6">
           <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
             📅 Mês atual até agora
@@ -348,6 +343,8 @@ export async function PrevisaoContent() {
           </div>
         </div>
       </div>
+
+      <WhatsAppButton posicao="esquerda" tamanho="pequeno" />
     </div>
   )
 }
