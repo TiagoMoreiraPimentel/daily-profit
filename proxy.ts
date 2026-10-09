@@ -28,13 +28,15 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  // Páginas públicas que NÃO devem redirecionar mesmo com usuário logado
+  // Páginas públicas que NÃO devem redirecionar para login
   const isPublicPage =
     pathname === '/' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/cadastro') ||
     pathname.startsWith('/esqueci-senha') ||
-    pathname.startsWith('/atualizar-senha')  // <-- ADICIONADO
+    pathname.startsWith('/atualizar-senha') ||
+    pathname.startsWith('/termos') ||
+    pathname.startsWith('/privacidade')
 
   const isAuthPage =
     pathname.startsWith('/login') ||
@@ -48,7 +50,6 @@ export async function proxy(request: NextRequest) {
   }
 
   // Se está logado e tenta acessar login/cadastro → manda para dashboard
-  // MAS: NÃO redireciona se estiver em /atualizar-senha (fluxo de recuperação)
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
@@ -60,12 +61,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Roda o proxy em todas as rotas EXCETO:
-     * - api (rotas de API não precisam de auth via proxy)
-     * - _next/static, _next/image (arquivos estáticos do Next.js)
-     * - favicon e imagens
-     */
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

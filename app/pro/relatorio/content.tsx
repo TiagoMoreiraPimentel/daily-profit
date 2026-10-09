@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import { ExportarCSV } from './exportar-csv'
 import { GraficoEvolucao } from './grafico'
 import { WhatsAppButton } from '@/components/whatsapp-button'
+import { AppFooter } from '@/components/app-footer'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -204,6 +205,8 @@ export async function RelatorioContent() {
             </ul>
           )}
         </div>
+
+        <AppFooter />
       </div>
 
       <WhatsAppButton posicao="esquerda" tamanho="pequeno" />

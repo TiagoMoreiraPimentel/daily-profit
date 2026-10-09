@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { RecorrentesForm } from './form'
 import { RecorrentesLista, type RecorrentesListaHandle } from './lista'
 import { WhatsAppButton } from '@/components/whatsapp-button'
+import { AppFooter } from '@/components/app-footer'
 
 export function RecorrentesContent({ tenantId }: { tenantId: string }) {
   const listaRef = useRef<RecorrentesListaHandle>(null)
@@ -47,6 +48,8 @@ export function RecorrentesContent({ tenantId }: { tenantId: string }) {
             <RecorrentesLista ref={listaRef} tenantId={tenantId} />
           </div>
         </div>
+
+        <AppFooter />
       </div>
 
       <WhatsAppButton posicao="esquerda" tamanho="pequeno" />

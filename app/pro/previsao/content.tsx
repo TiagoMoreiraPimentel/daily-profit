@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { WhatsAppButton } from '@/components/whatsapp-button'
+import { AppFooter } from '@/components/app-footer'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -342,6 +343,8 @@ export async function PrevisaoContent() {
             </div>
           </div>
         </div>
+
+        <AppFooter />
       </div>
 
       <WhatsAppButton posicao="esquerda" tamanho="pequeno" />

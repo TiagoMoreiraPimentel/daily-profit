@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { getAdminInfo } from '@/lib/admin'
 import { AdminContent } from './content'
 
@@ -25,26 +25,26 @@ async function AdminWrapper() {
   const admin = await getAdminInfo()
   if (!admin) redirect('/dashboard')
 
-  const supabase = await createClient()
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
 
-  // Busca todos os tenants
-  const { data: tenants } = await supabase
+  const { data: tenants } = await supabaseAdmin
     .from('tenants')
     .select('id, nome_negocio, tipo, plano, criado_em')
     .order('criado_em', { ascending: false })
 
-  // Busca usuários donos
-  const { data: users } = await supabase
+  const { data: users } = await supabaseAdmin
     .from('users')
     .select('tenant_id, nome, email')
 
-  // Busca contagem de transações por tenant
-  const { data: transacoes } = await supabase
+  const { data: transacoes } = await supabaseAdmin
     .from('transactions')
     .select('tenant_id')
 
-  // Busca assinaturas
-  const { data: assinaturas } = await supabase
+  const { data: assinaturas } = await supabaseAdmin
     .from('subscriptions')
     .select('tenant_id, status, proxima_cobranca, ultimo_pagamento')
 

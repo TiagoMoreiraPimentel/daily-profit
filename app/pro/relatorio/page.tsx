@@ -8,7 +8,13 @@ import { RelatorioContent } from './content'
 
 export default function RelatorioPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-50 p-8 text-center text-sm text-zinc-500">Carregando...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-50 p-8 text-center text-sm text-zinc-500">
+          Carregando...
+        </div>
+      }
+    >
       <RelatorioWrapper />
     </Suspense>
   )
@@ -23,7 +29,8 @@ async function RelatorioWrapper() {
 
   const status = await getStatusPlano()
 
-  if (status?.plano !== 'pro') {
+  // Pro OU Super podem acessar
+  if (status?.plano !== 'pro' && status?.plano !== 'super') {
     return (
       <div className="min-h-screen bg-zinc-50 p-4 md:p-8">
         <ProBloqueio

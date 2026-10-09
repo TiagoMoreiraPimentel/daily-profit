@@ -6,7 +6,7 @@ Você é meu assistente técnico no desenvolvimento de um SaaS chamado "Daily Pr
 
 SOBRE O PRODUTO:
 - Nome provisório: Daily Profit
-- Domínio: dailyprofit.com.br — REGISTRADO (09/10/2026), propagação pendente
+- Domínio: dailyprofit.com.br — REGISTRADO, propagação pendente
 - Proposta: app que mostra ao autônomo/MEI quanto ele realmente lucrou no dia,
   separando automaticamente o que é pessoal do que é do negócio.
 - Público inicial: B2C (autônomos, MEIs, informal)
@@ -19,11 +19,11 @@ DECISÕES TRAVADAS:
 - Banco + Auth + Realtime: Supabase
 - Frontend: Next.js 16 + Tailwind v4 + TypeScript
 - Hospedagem front: Vercel (free) — CONFIGURADO
-- Domínio: dailyprofit.com.br (registro.br), apontando para Vercel
+- Domínio: dailyprofit.com.br (registro.br), propagando para Vercel
 - Email transacional: Resend — REMOVIDO (sem domínio verificado ainda)
 - Preço Pro em produção: R$ 19,90/mês
 - Preço em TESTE (atual): R$ 1,00/mês (manter até concluir teste)
-- Planos: free, pro, super (super = admin/dev)  [NOVO]
+- Planos: free, pro, super (super = admin/dev)
 - Plano Free: 30 transações/mês + lucro do dia + separação pessoal/negócio
 - Plano Pro: ilimitado + previsão de caixa + relatório + gráfico
 - Plano Super: tudo do Pro + acesso ao painel /admin
@@ -48,8 +48,12 @@ DECISÕES TRAVADAS:
 - Modal de nova transação (substituiu formulário fixo)
 - UPDATE de transações via API route (para evitar CORS no PATCH)
 - Link de cobrança: REMOVIDO (exige OAuth + Split de Pagamentos)
-- Painel admin /admin: exclusivo para plano super  [NOVO]
-- Contagem de transações: live (apagadas não são contabilizadas)  [NOVO]
+- Painel admin /admin: exclusivo para plano super
+- Contagem de transações: live (apagadas não são contabilizadas)
+- Landing page na raiz do domínio (/)
+- WhatsApp flutuante: 11 99223-3306 (suporte)
+  Posição: direita na landing, esquerda nas telas internas
+- Termos e Privacidade: páginas placeholder criadas
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
@@ -60,6 +64,7 @@ FUNCIONALIDADES CORE:
 - F6: Relatório mensal de lucro (Pro)                            [x] FEITO
 - F7: Gráfico de evolução (Pro)                                  [x] FEITO
 - F8: Painel admin (/admin) — exclusivo do plano super           [x] FEITO
+- F9: Landing page na raiz                                       [x] FEITO
 
 REGRAS DE NEGÓCIO:
 - Limite do Free aplicado no BACKEND, não no frontend
@@ -80,7 +85,7 @@ FASE 0 — Fundação (antes de codar)
 [x] Criar conta Vercel
 [x] Criar repositório Git local
 [x] Criar repositório remoto (GitHub)
-[ ] Domínio propagando para Vercel (aguardando ~2h)
+[~] Domínio propagando para Vercel (aguardando)
 
 FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar projeto no Supabase — região South America (São Paulo)
@@ -91,7 +96,7 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar função count_monthly_transactions()
 [x] Criar função get_user_tenant()
 [x] Criar função pode_inserir_transacao()
-[x] Criar função is_super() (para o painel admin)  [NOVO]
+[x] Criar função is_super() (para o painel admin)
 [x] Criar view vw_lucro_diario
 [x] Criar trigger updated_at
 [x] Seed de categorias padrão (15 categorias)
@@ -99,9 +104,9 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar trigger handle_new_user (cria tenant + user no cadastro)
 [x] Criar política auth_admin_read_users
 [x] Política de leitura pública para categorias_padrao
-[x] Coluna ultimo_pagamento em subscriptions  [NOVO]
-[x] Constraint plano aceita 'super' em tenants e subscriptions  [NOVO]
-[x] Políticas RLS para super (tenants, users, transactions)  [NOVO]
+[x] Coluna ultimo_pagamento em subscriptions
+[x] Constraint plano aceita 'super' em tenants e subscriptions
+[x] Políticas RLS para super (tenants, users, transactions)
 [PULADO] Configurar custom claim tenant_id no JWT
          → bloqueado no plano Free. Usamos get_user_tenant() no RLS.
 [ ] Testar isolamento entre 2 tenants diferentes
@@ -130,7 +135,7 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F3: Tela com cards de resumo (negócio + pessoal)
 [x] Listagem de transações do dia (separada por natureza + hora)
 [x] Supabase Realtime na tela de lucro (atualização automática)
-[x] Badge de plano (Free/Pro/Super) ao lado do nome  [ATUALIZADO]
+[x] Badge de plano (Free/Pro/Super) ao lado do nome
 [x] Hora nas transações (fuso America/Sao_Paulo)
 [x] Excluir transações do dashboard
 [x] Editar transações (via API route para evitar CORS)
@@ -139,14 +144,13 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] Navegação por data no dashboard (setas + calendário)
 [x] Cards sincronizados com a data selecionada
 [x] Registrar transação na data selecionada (não só hoje)
-[ ] Filtro por data  [ADIADO — substituído por navegação por data]
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
 [x] Banner suave ao atingir 80% do limite
 [x] Modal de bloqueio ao atingir 100%
 [x] Botão "Assinar Pro" sempre visível no dashboard (free only)
-[x] Bloco AssinaturaInfo no dashboard (status da assinatura)  [NOVO]
+[x] Bloco AssinaturaInfo no dashboard (status da assinatura)
 [ ] Email pós-valor (7 dias de uso)  [ADIADO — sem domínio/email]
 
 FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
@@ -162,7 +166,7 @@ FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
 [x] Proxy exclui /api/* do matcher (webhook não passa por auth)
 [x] Migrar para credenciais de PRODUÇÃO
 [x] Preço reduzido para R$ 1,00 para teste
-[x] Webhook salva ultimo_pagamento e proxima_cobranca  [NOVO]
+[x] Webhook salva ultimo_pagamento e proxima_cobranca
 [ ] Testar assinatura real com cartão real (R$ 1,00)  [PENDENTE]
 [ ] Verificar atualização automática do tenant para "pro" via webhook
 [ ] Reverter preço para R$ 19,90 após o teste
@@ -182,21 +186,22 @@ FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 [x] F7: Gráfico de evolução dos últimos 6 meses
 [ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
 
-FASE 8 — Landing Page + SEO
-[ ] Landing page na raiz do site
-[ ] Página de preços
+FASE 8 — Landing Page + SEO  [CONCLUÍDA — parcial]
+[x] Landing page na raiz do site (/)
+[x] Página de preços (dentro da landing)
 [ ] Páginas SEO: "controle financeiro para MEI", "app de lucro para autônomo"
 [ ] Google Search Console
 [ ] Analytics (Plausible ou GA4)
-[ADIADO] Configurar Resend (email transacional) — sem domínio verificado
+[ADIADO] Configurar Resend (email transacional) — aguardando domínio
 
 FASE 9 — Lançamento
-[~] Domínio customizado na Vercel (propagação em andamento)
-[ ] SSL
-[ ] Termos de uso + Política de privacidade (LGPD)
+[~] Domínio customizado na Vercel (propagando)
+[ ] SSL (automático após propagação)
+[x] Termos de uso (placeholder)
+[x] Política de privacidade (placeholder)
 [ ] Backup automático do Supabase
 [ ] Monitoramento de erros (Sentry free)
-[ ] Canal de suporte (email ou WhatsApp)
+[ ] Canal de suporte (WhatsApp configurado, falta treinar resposta)
 [ ] Testes com 5-10 autônomos reais
 
 FASE 10 — Ajustes de UX Mobile  [CONCLUÍDA]
@@ -204,8 +209,9 @@ FASE 10 — Ajustes de UX Mobile  [CONCLUÍDA]
 [x] Contraste dos FABs e links como botão
 [x] Contraste dos inputs (texto digitado legível)
 [x] color-scheme: light no globals.css
+[x] WhatsApp flutuante em todas as telas (direita landing, esquerda app)
 
-FASE 11 — Painel Admin  [CONCLUÍDA]  [NOVA]
+FASE 11 — Painel Admin  [CONCLUÍDA]
 [x] Adicionar plano 'super' na constraint de tenants e subscriptions
 [x] Criar função is_super() no banco
 [x] Criar políticas RLS para super (leitura global)
@@ -243,31 +249,31 @@ FORMATO DE RESPOSTA PADRÃO:
 - Próximo passo sugerido (1-2 linhas)
 
 ESTADO ATUAL:
-- Fase: 11 (Painel Admin) — CONCLUÍDA
+- Fase: 8 (Landing Page) — CONCLUÍDA (parcial)
 - Concluído até agora:
   * FASE 0: Supabase + Mercado Pago + Vercel + GitHub + domínio registrado
   * FASE 1: banco completo (tabelas, RLS, funções, view, triggers, seed,
-    coluna ultimo_pagamento, plano super, políticas RLS super)
+    plano super, políticas RLS super, ultimo_pagamento)
   * FASE 2: auth completo
   * FASE 3: dashboard completo (navegação por data, FABs, modal,
     editar/excluir, cards sincronizados)
   * FASE 4: limite Free + botão Assinar + bloco AssinaturaInfo
   * FASE 5: Mercado Pago em produção (plano, assinatura via Brick,
-    webhook testado, salva ultimo_pagamento); preço R$ 1,00 para teste
-  * FASE 6: REMOVIDA (link de cobrança)
+    webhook testado); preço R$ 1,00 para teste
   * FASE 7: previsão, recorrentes, relatório, gráfico
-  * FASE 10: ajustes de UX mobile
-  * FASE 11: painel admin completo (/admin, plano super, mudar plano,
-    excluir tenant, status/últ.pgto/próx.venc.)
+  * FASE 8: landing page com preços, problema/solução, como funciona
+  * FASE 9: termos e privacidade (placeholder)
+  * FASE 10: UX mobile + WhatsApp flutuante (11 99223-3306)
+  * FASE 11: painel admin completo
   * Deploy ativo em https://daily-profit-theta.vercel.app
-  * Domínio dailyprofit.com.br em propagação (~2h restantes)
+  * Domínio dailyprofit.com.br em propagação
   * Commit + push feitos
 - Última decisão: contagem de transações é live (deletadas não contam)
 - Pendências conhecidas:
   * Domínio dailyprofit.com.br propagando para Vercel
   * Rate limit de 2 e-mails/hora do Supabase Free (resolve com Resend)
   * Teste real de assinatura R$ 1,00 pendente
-  * Landing Page + SEO ainda não iniciada
+  * SEO (páginas, Google Search Console, Analytics)
 - Próximo passo: verificar propagação do domínio e configurar Resend
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
@@ -284,6 +290,7 @@ Guardar tudo em gerenciador de senhas (Bitwarden, 1Password, etc.).
 - Mercado Pago Access Token (produção): [guardada no .env e Vercel]
 - Mercado Pago Public Key (produção): [guardada no .env e Vercel]
 - Resend API key: REMOVIDO — aguardando verificação do domínio
+- WhatsApp de suporte: +55 11 99223-3306
 - Registro.br: [conta do Tiago]
 
 📌 COMO USAR ESTE PROMPT:
