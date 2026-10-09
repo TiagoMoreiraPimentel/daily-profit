@@ -13,6 +13,7 @@ type Transacao = {
   valor: number
   descricao: string | null
   natureza: 'negocio' | 'pessoal'
+  categoria: string | null
 }
 
 function formatarDataBR(dataISO: string) {
@@ -34,7 +35,7 @@ export function NovaTransacaoModal({
 }: {
   tenantId: string
   tipoInicial: 'entrada' | 'saida'
-  dataSelecionada: string // formato YYYY-MM-DD
+  dataSelecionada: string
   transacaoExistente?: Transacao
   onFechar: () => void
 }) {
@@ -53,10 +54,30 @@ export function NovaTransacaoModal({
   const [natureza, setNatureza] = useState<'negocio' | 'pessoal'>(
     transacaoExistente?.natureza ?? 'negocio'
   )
+  const [categoria, setCategoria] = useState(transacaoExistente?.categoria ?? '')
+  const [categorias, setCategorias] = useState<
+    { id: number; nome: string; tipo: string; natureza_sugerida: string }[]
+  >([])
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
-  // Fecha com ESC
+  useEffect(() => {
+    async function carregarCategorias() {
+      try {
+        const res = await fetch(
+          `/api/categorias?tipo=${tipo}&natureza=${natureza}`
+        )
+        const data = await res.json()
+        if (res.ok) {
+          setCategorias(data.categorias ?? [])
+        }
+      } catch (e) {
+        console.error('Erro ao carregar categorias:', e)
+      }
+    }
+    carregarCategorias()
+  }, [tipo, natureza])
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape' && !loading) onFechar()
@@ -79,7 +100,6 @@ export function NovaTransacaoModal({
     }
 
     if (modoEdicao && transacaoExistente) {
-      // Editar via API route (evita CORS no PATCH)
       try {
         const res = await fetch('/api/transactions/editar', {
           method: 'POST',
@@ -90,30 +110,29 @@ export function NovaTransacaoModal({
             valor: valorNumerico,
             descricao,
             natureza,
+            categoria: categoria || null,
           }),
         })
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
-          console.error('Erro ao editar transação:', data)
           setErro(data.error || 'Erro ao salvar. Tente novamente.')
           setLoading(false)
           return
         }
       } catch (e) {
-        console.error('Erro de rede ao editar:', e)
         setErro('Erro de conexão. Tente novamente.')
         setLoading(false)
         return
       }
     } else {
-      // Criar nova transação direto pelo Supabase
       const { error } = await supabase.from('transactions').insert({
         tenant_id: tenantId,
         tipo,
         valor: valorNumerico,
         descricao: descricao.trim() || null,
         natureza,
+        categoria: categoria || null,
         data: dataSelecionada,
       })
 
@@ -135,7 +154,7 @@ export function NovaTransacaoModal({
       onClick={() => !loading && onFechar()}
     >
       <div
-        className="bg-white rounded-lg max-w-md w-full p-6"
+        className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
@@ -250,8 +269,26 @@ export function NovaTransacaoModal({
                 🏠 Pessoal
               </button>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="categoria">Categoria (opcional)</Label>
+            <select
+              id="categoria"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              disabled={loading}
+              className="flex h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:opacity-50"
+            >
+              <option value="">Sem categoria</option>
+              {categorias.map((cat) => (
+                <option key={cat.id} value={cat.nome}>
+                  {cat.nome}
+                </option>
+              ))}
+            </select>
             <p className="text-xs text-zinc-500">
-              O que for marcado como &quot;pessoal&quot; não entra no cálculo de lucro.
+              Você pode definir a categoria agora ou depois, editando a transação.
             </p>
           </div>
 

@@ -11,6 +11,7 @@ type Transacao = {
   valor: number
   descricao: string | null
   natureza: 'negocio' | 'pessoal'
+  categoria: string | null
 }
 
 export function AcoesTransacao({

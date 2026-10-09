@@ -51,7 +51,10 @@ export async function TransacaoList({
                   <p className="text-sm font-medium text-zinc-900 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
-                  <p className="text-xs text-zinc-400">{formatarHora(t.criado_em)}</p>
+                  <p className="text-xs text-zinc-400">
+                    {formatarHora(t.criado_em)}
+                    {t.categoria && ` · ${t.categoria}`}
+                  </p>
                 </div>
                 <span
                   className={`text-sm font-semibold whitespace-nowrap ${
@@ -68,6 +71,7 @@ export async function TransacaoList({
                     valor: Number(t.valor),
                     descricao: t.descricao,
                     natureza: t.natureza,
+                    categoria: t.categoria,
                   }}
                 />
               </li>
@@ -88,7 +92,10 @@ export async function TransacaoList({
                   <p className="text-sm text-zinc-600 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
-                  <p className="text-xs text-zinc-400">{formatarHora(t.criado_em)}</p>
+                  <p className="text-xs text-zinc-400">
+                    {formatarHora(t.criado_em)}
+                    {t.categoria && ` · ${t.categoria}`}
+                  </p>
                 </div>
                 <span className="text-sm text-zinc-500 whitespace-nowrap">
                   {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
@@ -101,6 +108,7 @@ export async function TransacaoList({
                     valor: Number(t.valor),
                     descricao: t.descricao,
                     natureza: t.natureza,
+                    categoria: t.categoria,
                   }}
                 />
               </li>

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
-    const { id, tipo, valor, descricao, natureza } = await request.json()
+    const { id, tipo, valor, descricao, natureza, categoria } = await request.json()
 
     if (!id || !tipo || !valor) {
       return NextResponse.json({ error: 'Dados obrigatórios' }, { status: 400 })
@@ -23,11 +23,12 @@ export async function POST(request: Request) {
         valor: Number(valor),
         descricao: descricao?.trim() || null,
         natureza,
+        categoria: categoria || null,
       })
       .eq('id', id)
 
     if (error) {
-      console.error('Erro ao editar:', error)
+      console.error('Erro ao editar transação:', error)
       return NextResponse.json({ error: 'Erro ao editar' }, { status: 500 })
     }
 

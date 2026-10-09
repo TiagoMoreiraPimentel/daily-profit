@@ -121,6 +121,12 @@ async function DashboardContent({
           >
             📄 Relatório
           </Link>
+          <Link
+            href="/configuracoes"
+            className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
+          >
+            ⚙️ Configurações
+          </Link>
           <LogoutButton />
         </div>
       </div>
