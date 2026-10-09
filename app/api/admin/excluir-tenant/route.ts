@@ -29,25 +29,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tenant obrigatório' }, { status: 400 })
     }
 
-    // Usa admin client para deletar em cascata
     const supabaseAdmin = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // Deleta o tenant (cascata apaga users, transactions, subscriptions, etc.)
-    const { error } = await supabaseAdmin
+    // 1. Busca os usuários do tenant (antes de apagar)
+    const { data: usuarios } = await supabaseAdmin
+      .from('users')
+      .select('id, email')
+      .eq('tenant_id', tenantId)
+
+    // 2. Apaga o tenant (cascata apaga users, transactions, etc.)
+    const { error: tenantError } = await supabaseAdmin
       .from('tenants')
       .delete()
       .eq('id', tenantId)
 
-    if (error) {
-      console.error('Erro ao excluir tenant:', error)
-      return NextResponse.json({ error: 'Erro ao excluir' }, { status: 500 })
+    if (tenantError) {
+      console.error('Erro ao excluir tenant:', tenantError)
+      return NextResponse.json({ error: 'Erro ao excluir tenant' }, { status: 500 })
     }
 
-    console.log(`✅ Tenant ${tenantId} excluído`)
+    // 3. Apaga os usuários do auth.users
+    if (usuarios && usuarios.length > 0) {
+      for (const u of usuarios) {
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(u.id)
+        if (authError) {
+          console.error(`Erro ao apagar auth.users ${u.email}:`, authError)
+          // Continua mesmo se um falhar
+        } else {
+          console.log(`✅ auth.users apagado: ${u.email}`)
+        }
+      }
+    }
+
+    console.log(`✅ Tenant ${tenantId} excluído completamente`)
 
     return NextResponse.json({ ok: true })
   } catch (error) {
