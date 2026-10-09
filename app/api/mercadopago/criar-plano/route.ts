@@ -32,10 +32,7 @@ export async function POST() {
           frequency: 1,
           frequency_type: 'months',
           repetitions: 12,
-          billing_day: 10,
-          billing_day_proportional: true,
-          // free_trial REMOVIDO — a primeira cobrança acontece na data da assinatura
-          transaction_amount: 1.0,
+          transaction_amount: 5.0,
           currency_id: 'BRL',
         },
         payment_methods_allowed: {
@@ -58,7 +55,6 @@ export async function POST() {
 
     console.log('✅ Plano criado:', {
       id: data.id,
-      reason: data.reason,
       amount: data.auto_recurring?.transaction_amount,
     })
 
