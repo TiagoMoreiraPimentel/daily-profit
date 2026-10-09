@@ -6,7 +6,7 @@ Você é meu assistente técnico no desenvolvimento de um SaaS chamado "Daily Pr
 
 SOBRE O PRODUTO:
 - Nome provisório: Daily Profit
-- Domínio: ainda não comprado (será definido mais tarde)
+- Domínio: dailyprofit.com.br — REGISTRADO (09/10/2026), propagação pendente
 - Proposta: app que mostra ao autônomo/MEI quanto ele realmente lucrou no dia,
   separando automaticamente o que é pessoal do que é do negócio.
 - Público inicial: B2C (autônomos, MEIs, informal)
@@ -19,11 +19,14 @@ DECISÕES TRAVADAS:
 - Banco + Auth + Realtime: Supabase
 - Frontend: Next.js 16 + Tailwind v4 + TypeScript
 - Hospedagem front: Vercel (free) — CONFIGURADO
-- Email transacional: Resend — REMOVIDO (sem domínio ainda)
+- Domínio: dailyprofit.com.br (registro.br), apontando para Vercel
+- Email transacional: Resend — REMOVIDO (sem domínio verificado ainda)
 - Preço Pro em produção: R$ 19,90/mês
 - Preço em TESTE (atual): R$ 1,00/mês (manter até concluir teste)
+- Planos: free, pro, super (super = admin/dev)  [NOVO]
 - Plano Free: 30 transações/mês + lucro do dia + separação pessoal/negócio
-- Plano Pro: ilimitado + previsão de caixa + relatório + link de cobrança
+- Plano Pro: ilimitado + previsão de caixa + relatório + gráfico
+- Plano Super: tudo do Pro + acesso ao painel /admin
 - Autenticação: Supabase Auth nativo
 - RLS: obrigatório em todas as tabelas com tenant_id
 - tenant_id no JWT: NÃO — recurso bloqueado no plano Free
@@ -37,38 +40,47 @@ DECISÕES TRAVADAS:
   gera card_token_id → backend cria /preapproval com status authorized
 - Mercado Pago: produção (não mais sandbox)
 - Webhook: configurado no painel MP com URL da Vercel
+  Eventos: "Planos e assinaturas" + "Pagamentos (legacy)"
 - Rate limit de e-mails do Supabase Free: 2/hora (bloqueia cadastros)
-  → solução definitiva requer domínio próprio + SMTP (Resend)
-- FABs (Floating Action Buttons) para entrada/saída no dashboard  [NOVO]
-- Navegação por data no dashboard (setas + calendário nativo)   [NOVO]
-- Modal de nova transação (substituiu formulário fixo)           [NOVO]
+  → solução: verificar domínio no Resend + configurar SMTP
+- FABs (Floating Action Buttons) para entrada/saída no dashboard
+- Navegação por data no dashboard (setas + calendário nativo)
+- Modal de nova transação (substituiu formulário fixo)
+- UPDATE de transações via API route (para evitar CORS no PATCH)
+- Link de cobrança: REMOVIDO (exige OAuth + Split de Pagamentos)
+- Painel admin /admin: exclusivo para plano super  [NOVO]
+- Contagem de transações: live (apagadas não são contabilizadas)  [NOVO]
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
 - F2: Separação automática pessoal vs. negócio                   [x] FEITO
 - F3: Tela "Lucro do Dia" (entrou, saiu, lucro, lucro do mês)    [x] FEITO
-- F4: Link de cobrança integrado com Mercado Pago                [ ] PENDENTE
+- F4: Link de cobrança integrado com Mercado Pago                [REMOVIDO]
 - F5: Previsão simples de caixa (Pro)                            [x] FEITO
 - F6: Relatório mensal de lucro (Pro)                            [x] FEITO
 - F7: Gráfico de evolução (Pro)                                  [x] FEITO
+- F8: Painel admin (/admin) — exclusivo do plano super           [x] FEITO
 
 REGRAS DE NEGÓCIO:
 - Limite do Free aplicado no BACKEND, não no frontend
 - Paywall em 3 momentos: suave (80%), bloqueio (100%), pós-valor (7 dias)
 - Webhook do Mercado Pago obrigatório para bloquear/liberar acesso
 - Sem dados sensíveis (não é saúde/financeiro regulado)
+- Painel admin só acessível para plano 'super'
+- Contagem de transações é live (reflete o estado atual do banco)
 
 🔹 PARTE 2 — CHECKLIST DE IMPLANTAÇÃO
 
 FASE 0 — Fundação (antes de codar)
 [x] Definir nome provisório: "Daily Profit"
-[ ] Verificar INPI + registro.br para o domínio
-[ ] Comprar domínio (adiado)
+[x] Registrar domínio dailyprofit.com.br no registro.br (09/10/2026)
+[ ] Verificar INPI (marca registrada)
 [x] Criar conta Supabase
 [x] Criar conta Mercado Pago Developers
 [x] Criar conta Vercel
 [x] Criar repositório Git local
 [x] Criar repositório remoto (GitHub)
+[ ] Domínio propagando para Vercel (aguardando ~2h)
 
 FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar projeto no Supabase — região South America (São Paulo)
@@ -79,6 +91,7 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar função count_monthly_transactions()
 [x] Criar função get_user_tenant()
 [x] Criar função pode_inserir_transacao()
+[x] Criar função is_super() (para o painel admin)  [NOVO]
 [x] Criar view vw_lucro_diario
 [x] Criar trigger updated_at
 [x] Seed de categorias padrão (15 categorias)
@@ -86,6 +99,9 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar trigger handle_new_user (cria tenant + user no cadastro)
 [x] Criar política auth_admin_read_users
 [x] Política de leitura pública para categorias_padrao
+[x] Coluna ultimo_pagamento em subscriptions  [NOVO]
+[x] Constraint plano aceita 'super' em tenants e subscriptions  [NOVO]
+[x] Políticas RLS para super (tenants, users, transactions)  [NOVO]
 [PULADO] Configurar custom claim tenant_id no JWT
          → bloqueado no plano Free. Usamos get_user_tenant() no RLS.
 [ ] Testar isolamento entre 2 tenants diferentes
@@ -106,7 +122,7 @@ FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
 [x] Trigger handle_new_user recriado (não existia)
 [x] Usuários órfãos corrigidos via SQL
 [!] Rate limit de e-mails do Supabase Free limita cadastros a 2/hora
-    → aguardar compra de domínio para resolver
+    → aguardar verificação do domínio no Resend
 
 FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F1: Tela de registrar transação (entrada/saída, valor, descrição)
@@ -114,21 +130,23 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F3: Tela com cards de resumo (negócio + pessoal)
 [x] Listagem de transações do dia (separada por natureza + hora)
 [x] Supabase Realtime na tela de lucro (atualização automática)
-[x] Badge de plano (Free/Pro) ao lado do nome
+[x] Badge de plano (Free/Pro/Super) ao lado do nome  [ATUALIZADO]
 [x] Hora nas transações (fuso America/Sao_Paulo)
 [x] Excluir transações do dashboard
-[x] Modal de nova transação (substituiu formulário fixo)          [NOVO]
-[x] Botões FAB flutuantes (+ entrada / − saída)                    [NOVO]
-[x] Navegação por data no dashboard (setas + calendário)           [NOVO]
-[x] Cards sincronizados com a data selecionada                     [NOVO]
-[ ] Edição de transações  [ADIADO — não é crítico para MVP]
+[x] Editar transações (via API route para evitar CORS)
+[x] Modal de nova transação (substituiu formulário fixo)
+[x] Botões FAB flutuantes (+ entrada / − saída)
+[x] Navegação por data no dashboard (setas + calendário)
+[x] Cards sincronizados com a data selecionada
+[x] Registrar transação na data selecionada (não só hoje)
 [ ] Filtro por data  [ADIADO — substituído por navegação por data]
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
 [x] Banner suave ao atingir 80% do limite
 [x] Modal de bloqueio ao atingir 100%
-[x] Botão "Assinar Pro" sempre visível no dashboard
+[x] Botão "Assinar Pro" sempre visível no dashboard (free only)
+[x] Bloco AssinaturaInfo no dashboard (status da assinatura)  [NOVO]
 [ ] Email pós-valor (7 dias de uso)  [ADIADO — sem domínio/email]
 
 FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
@@ -144,20 +162,22 @@ FASE 5 — Mercado Pago  [EM ANDAMENTO — produção]
 [x] Proxy exclui /api/* do matcher (webhook não passa por auth)
 [x] Migrar para credenciais de PRODUÇÃO
 [x] Preço reduzido para R$ 1,00 para teste
+[x] Webhook salva ultimo_pagamento e proxima_cobranca  [NOVO]
 [ ] Testar assinatura real com cartão real (R$ 1,00)  [PENDENTE]
 [ ] Verificar atualização automática do tenant para "pro" via webhook
 [ ] Reverter preço para R$ 19,90 após o teste
 
-FASE 6 — Link de Cobrança (F4)
-[ ] Criar preferência de pagamento no Mercado Pago
-[ ] Gerar link compartilhável
-[ ] Webhook de pagamento aprovado → criar transaction automática
-[ ] Tela de histórico de links
+FASE 6 — Link de Cobrança (F4)  [REMOVIDA]
+[REMOVIDO] Criar preferência de pagamento no Mercado Pago
+[REMOVIDO] Gerar link compartilhável
+[REMOVIDO] Webhook de pagamento aprovado → criar transaction automática
+[REMOVIDO] Tela de histórico de links
+Motivo: exige OAuth + Split de Pagamentos (inviável para MVP).
 
 FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 [x] F5: Previsão de caixa (média + tendência + recorrentes)
 [x] Tela de cadastro de contas recorrentes (/pro/recorrentes)
-[x] Refresh automático da lista de recorrentes  [NOVO]
+[x] Refresh automático da lista de recorrentes
 [x] F6: Relatório mensal de lucro (com exportação CSV)
 [x] F7: Gráfico de evolução dos últimos 6 meses
 [ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
@@ -168,10 +188,10 @@ FASE 8 — Landing Page + SEO
 [ ] Páginas SEO: "controle financeiro para MEI", "app de lucro para autônomo"
 [ ] Google Search Console
 [ ] Analytics (Plausible ou GA4)
-[ADIADO] Configurar Resend (email transacional) — sem domínio
+[ADIADO] Configurar Resend (email transacional) — sem domínio verificado
 
 FASE 9 — Lançamento
-[ ] Domínio customizado na Vercel
+[~] Domínio customizado na Vercel (propagação em andamento)
 [ ] SSL
 [ ] Termos de uso + Política de privacidade (LGPD)
 [ ] Backup automático do Supabase
@@ -179,11 +199,27 @@ FASE 9 — Lançamento
 [ ] Canal de suporte (email ou WhatsApp)
 [ ] Testes com 5-10 autônomos reais
 
-FASE 10 — Ajustes de UX Mobile  [NOVO]
+FASE 10 — Ajustes de UX Mobile  [CONCLUÍDA]
 [x] Contraste dos botões (entrar, previsão, relatório, sair)
 [x] Contraste dos FABs e links como botão
 [x] Contraste dos inputs (texto digitado legível)
-[x] color-scheme: light no globals.css  [NOVO]
+[x] color-scheme: light no globals.css
+
+FASE 11 — Painel Admin  [CONCLUÍDA]  [NOVA]
+[x] Adicionar plano 'super' na constraint de tenants e subscriptions
+[x] Criar função is_super() no banco
+[x] Criar políticas RLS para super (leitura global)
+[x] Criar lib/admin.ts (getAdminInfo + isSuper)
+[x] Criar app/api/admin/mudar-plano/route.ts
+[x] Criar app/api/admin/excluir-tenant/route.ts
+[x] Criar app/admin/page.tsx
+[x] Criar app/admin/content.tsx (tabela + busca + ações)
+[x] Link "🔧 Admin" no dashboard (só para super)
+[x] Coluna ultimo_pagamento em subscriptions
+[x] Colunas Status/Últ.pgto/Próx.venc. no painel admin
+[x] Bloco AssinaturaInfo no dashboard do usuário
+[ ] Badge "Concedido" para Pro sem assinatura  [MELHORIA FUTURA]
+[ ] Coluna "Última atividade" no painel admin  [MELHORIA FUTURA]
 
 🔹 PARTE 3 — REGRAS DE CONTINUIDADE
 
@@ -207,31 +243,32 @@ FORMATO DE RESPOSTA PADRÃO:
 - Próximo passo sugerido (1-2 linhas)
 
 ESTADO ATUAL:
-- Fase: 7 (Funcionalidades Pro) — CONCLUÍDA
+- Fase: 11 (Painel Admin) — CONCLUÍDA
 - Concluído até agora:
-  * FASE 0: Supabase + Mercado Pago + Vercel + repositório GitHub
-  * FASE 1: banco completo (tabelas, RLS, funções, view, triggers, seed)
-  * FASE 2: auth completo (cadastro, login, recuperação, logout, proxy,
-    trigger handle_new_user recriado, usuários órfãos corrigidos)
-  * FASE 3: dashboard completo com navegação por data, FABs, modal de
-    transação, cards sincronizados, excluir transação
-  * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao) +
-    botão Assinar Pro sempre visível
+  * FASE 0: Supabase + Mercado Pago + Vercel + GitHub + domínio registrado
+  * FASE 1: banco completo (tabelas, RLS, funções, view, triggers, seed,
+    coluna ultimo_pagamento, plano super, políticas RLS super)
+  * FASE 2: auth completo
+  * FASE 3: dashboard completo (navegação por data, FABs, modal,
+    editar/excluir, cards sincronizados)
+  * FASE 4: limite Free + botão Assinar + bloco AssinaturaInfo
   * FASE 5: Mercado Pago em produção (plano, assinatura via Brick,
-    webhook testado); preço em R$ 1,00 para teste
-  * FASE 7: previsão de caixa (média + tendência + recorrentes),
-    tela de recorrentes com refresh automático, relatório mensal,
-    gráfico de evolução
-  * FASE 10: ajustes de UX mobile (contraste de botões e inputs)
-  * Resend REMOVIDO (sem domínio ainda)
+    webhook testado, salva ultimo_pagamento); preço R$ 1,00 para teste
+  * FASE 6: REMOVIDA (link de cobrança)
+  * FASE 7: previsão, recorrentes, relatório, gráfico
+  * FASE 10: ajustes de UX mobile
+  * FASE 11: painel admin completo (/admin, plano super, mudar plano,
+    excluir tenant, status/últ.pgto/próx.venc.)
   * Deploy ativo em https://daily-profit-theta.vercel.app
+  * Domínio dailyprofit.com.br em propagação (~2h restantes)
   * Commit + push feitos
-- Última decisão: preço R$ 1,00 para teste em produção
+- Última decisão: contagem de transações é live (deletadas não contam)
 - Pendências conhecidas:
-  * Rate limit de 2 e-mails/hora do Supabase Free (resolve com domínio)
+  * Domínio dailyprofit.com.br propagando para Vercel
+  * Rate limit de 2 e-mails/hora do Supabase Free (resolve com Resend)
   * Teste real de assinatura R$ 1,00 pendente
   * Landing Page + SEO ainda não iniciada
-- Próximo passo: A DEFINIR com o usuário
+- Próximo passo: verificar propagação do domínio e configurar Resend
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 
@@ -243,10 +280,11 @@ Guardar tudo em gerenciador de senhas (Bitwarden, 1Password, etc.).
 - Supabase service_role key: [guardada no .env e gerenciador de senhas]
 - Supabase DB password: [guardada no gerenciador de senhas]
 - Vercel URL de produção: https://daily-profit-theta.vercel.app
+- Domínio próprio: dailyprofit.com.br (propagando)
 - Mercado Pago Access Token (produção): [guardada no .env e Vercel]
 - Mercado Pago Public Key (produção): [guardada no .env e Vercel]
-- Resend API key: REMOVIDO — sem domínio
-- Domínio: [a definir]
+- Resend API key: REMOVIDO — aguardando verificação do domínio
+- Registro.br: [conta do Tiago]
 
 📌 COMO USAR ESTE PROMPT:
 - Salvar como PROMPT_MESTRE.md no computador

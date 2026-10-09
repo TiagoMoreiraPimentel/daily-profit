@@ -12,6 +12,7 @@ import { BannerLimite } from './paywall'
 import { AssinarButton } from './assinar-button'
 import { DateNavigator } from './date-navigator'
 import { BotoesTransacao } from './botoes-transacao'
+import { AssinaturaInfo } from './assinatura-info'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -55,11 +56,16 @@ async function DashboardContent({
     getStatusPlano(),
   ])
 
+  const ehSuper = plano === 'super'
+  const ehPro = plano === 'pro'
+  const ehFree = plano === 'free'
+
   return (
     <div className="max-w-4xl mx-auto pb-32">
       <RealtimeRefresh tenantId={profile.tenant_id} />
 
-      {statusPlano?.plano === 'free' &&
+      {ehFree &&
+        statusPlano?.plano === 'free' &&
         statusPlano.percentual >= 80 &&
         statusPlano.limite && (
           <BannerLimite
@@ -67,6 +73,8 @@ async function DashboardContent({
             limite={statusPlano.limite}
           />
         )}
+
+      <AssinaturaInfo />
 
       <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
         <div>
@@ -77,18 +85,28 @@ async function DashboardContent({
             {nomeNegocio}
             <span
               className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                plano === 'pro'
+                ehSuper
+                  ? 'bg-purple-100 text-purple-700'
+                  : ehPro
                   ? 'bg-green-100 text-green-700'
                   : 'bg-zinc-100 text-zinc-600'
               }`}
             >
-              {plano === 'pro' ? '⭐ Pro' : 'Free'}
+              {ehSuper ? '⭐ Super' : ehPro ? '⭐ Pro' : 'Free'}
             </span>
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {plano === 'free' && <AssinarButton />}
+          {ehSuper && (
+            <Link
+              href="/admin"
+              className="text-xs px-3 py-2 rounded-md border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 transition font-medium"
+            >
+              🔧 Admin
+            </Link>
+          )}
+          {ehFree && <AssinarButton />}
           <Link
             href="/pro/previsao"
             className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"

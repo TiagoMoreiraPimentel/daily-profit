@@ -6,34 +6,36 @@ export async function POST(request: Request) {
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
+      { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
     const body = await request.json()
     console.log('🔔 Webhook recebido:', JSON.stringify(body, null, 2))
 
-    const { type, data } = body
+    let tipo = body.type
+    let dataId = body.data?.id
 
-    if (!data?.id) {
-      console.log('Webhook sem data.id, ignorando')
+    if (!tipo && body.topic) tipo = body.topic
+    if (!dataId && body.resource) {
+      dataId = String(body.resource).split('/').pop()
+    }
+
+    console.log('📌 Tipo detectado:', tipo, '| ID:', dataId)
+
+    if (!dataId) {
       return NextResponse.json({ received: true })
     }
 
     try {
-      if (type === 'subscription_preapproval' || type === 'preapproval') {
-        await tratarAssinatura(data.id, supabaseAdmin)
+      if (tipo === 'subscription_preapproval' || tipo === 'preapproval') {
+        await tratarAssinatura(dataId, supabaseAdmin)
       }
 
       if (
-        type === 'subscription_authorized_payment' ||
-        type === 'authorized_payment'
+        tipo === 'subscription_authorized_payment' ||
+        tipo === 'authorized_payment'
       ) {
-        await tratarPagamentoAutorizado(data.id, supabaseAdmin)
+        await tratarPagamentoAutorizado(dataId, supabaseAdmin)
       }
     } catch (innerError) {
       console.error('⚠️ Erro ao processar (ignorado):', innerError)
@@ -46,6 +48,9 @@ export async function POST(request: Request) {
   }
 }
 
+// =====================================================
+// ASSINATURA (plano Pro)
+// =====================================================
 async function tratarAssinatura(
   preapprovalId: string,
   supabaseAdmin: SupabaseClient
@@ -103,6 +108,9 @@ async function tratarAssinatura(
   console.log(`✅ Tenant ${tenantId} → plano "${plano}" (status: ${status})`)
 }
 
+// =====================================================
+// PAGAMENTO AUTORIZADO (cobrança recorrente da assinatura)
+// =====================================================
 async function tratarPagamentoAutorizado(
   paymentId: string,
   supabaseAdmin: SupabaseClient
@@ -126,28 +134,64 @@ async function tratarPagamentoAutorizado(
     id: pagamento.id,
     status: pagamento.status,
     preapproval_id: pagamento.preapproval_id,
+    date_created: pagamento.date_created,
+    payment_date: pagamento.payment_date,
   })
 
-  if (pagamento.status === 'approved' && pagamento.preapproval_id) {
-    const assinaturaRes = await fetch(
-      `https://api.mercadopago.com/preapproval/${pagamento.preapproval_id}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    )
-
-    if (assinaturaRes.ok) {
-      const assinatura = await assinaturaRes.json()
-      const tenantId = assinatura.external_reference
-
-      if (tenantId) {
-        await supabaseAdmin
-          .from('tenants')
-          .update({ plano: 'pro' })
-          .eq('id', tenantId)
-
-        console.log(`✅ Pagamento aprovado — Tenant ${tenantId} confirmado como PRO`)
-      }
-    }
+  if (pagamento.status !== 'approved' || !pagamento.preapproval_id) {
+    console.log('Pagamento não aprovado ou sem preapproval_id, ignorando')
+    return
   }
+
+  // Busca a assinatura para pegar o external_reference e a próxima cobrança
+  const assinaturaRes = await fetch(
+    `https://api.mercadopago.com/preapproval/${pagamento.preapproval_id}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  )
+
+  if (!assinaturaRes.ok) {
+    console.error('Erro ao buscar assinatura:', await assinaturaRes.text())
+    return
+  }
+
+  const assinatura = await assinaturaRes.json()
+  const tenantId = assinatura.external_reference
+
+  if (!tenantId) {
+    console.log('Sem external_reference na assinatura, ignorando')
+    return
+  }
+
+  const dataPagamento = pagamento.payment_date
+    ? pagamento.payment_date.split('T')[0]
+    : pagamento.date_created
+    ? pagamento.date_created.split('T')[0]
+    : new Date().toISOString().split('T')[0]
+
+  const proximaCobranca = assinatura.next_payment_date
+    ? assinatura.next_payment_date.split('T')[0]
+    : null
+
+  // Atualiza a assinatura com data do último pagamento + próxima cobrança
+  await supabaseAdmin
+    .from('subscriptions')
+    .update({
+      ultimo_pagamento: dataPagamento,
+      proxima_cobranca: proximaCobranca,
+      status: 'authorized',
+      plano: 'pro',
+    })
+    .eq('tenant_id', tenantId)
+
+  // Garante que o tenant está como pro
+  await supabaseAdmin
+    .from('tenants')
+    .update({ plano: 'pro' })
+    .eq('id', tenantId)
+
+  console.log(
+    `✅ Pagamento registrado — Tenant ${tenantId} | Último: ${dataPagamento} | Próximo: ${proximaCobranca}`
+  )
 }

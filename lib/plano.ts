@@ -16,9 +16,10 @@ export async function getStatusPlano() {
 
   const plano = (profile.tenants as { plano?: string } | null)?.plano ?? 'free'
 
-  if (plano === 'pro') {
+  // Pro e Super têm acesso total
+  if (plano === 'pro' || plano === 'super') {
     return {
-      plano: 'pro' as const,
+      plano: plano as 'pro' | 'super',
       transacoesMes: 0,
       limite: null,
       percentual: 0,
