@@ -1,23 +1,21 @@
 import { createClient } from '@/lib/supabase-server'
 
-export async function getResumoHoje() {
+export async function getResumoPorData(data: string) {
   const supabase = await createClient()
-  const hoje = new Date().toISOString().split('T')[0]
 
-  const { data, error } = await supabase
+  const { data: transacoes, error } = await supabase
     .from('transactions')
     .select('tipo, valor, natureza')
-    .eq('data', hoje)
+    .eq('data', data)
 
   if (error) throw error
 
-  const negocio = data?.filter((t) => t.natureza === 'negocio') ?? []
-  const pessoal = data?.filter((t) => t.natureza === 'pessoal') ?? []
+  const negocio = transacoes?.filter((t) => t.natureza === 'negocio') ?? []
+  const pessoal = transacoes?.filter((t) => t.natureza === 'pessoal') ?? []
 
   const entrouNegocio = negocio
     .filter((t) => t.tipo === 'entrada')
     .reduce((acc, t) => acc + Number(t.valor), 0)
-
   const saiuNegocio = negocio
     .filter((t) => t.tipo === 'saida')
     .reduce((acc, t) => acc + Number(t.valor), 0)
@@ -25,7 +23,6 @@ export async function getResumoHoje() {
   const entrouPessoal = pessoal
     .filter((t) => t.tipo === 'entrada')
     .reduce((acc, t) => acc + Number(t.valor), 0)
-
   const saiuPessoal = pessoal
     .filter((t) => t.tipo === 'saida')
     .reduce((acc, t) => acc + Number(t.valor), 0)
@@ -34,9 +31,9 @@ export async function getResumoHoje() {
     entrou: entrouNegocio,
     saiu: saiuNegocio,
     lucro: entrouNegocio - saiuNegocio,
-    pessoalLiquido: entrouPessoal - saiuPessoal,
     entrouPessoal,
     saiuPessoal,
+    pessoalLiquido: entrouPessoal - saiuPessoal,
   }
 }
 
@@ -60,7 +57,6 @@ export async function getResumoMes() {
   const entrouNegocio = negocio
     .filter((t) => t.tipo === 'entrada')
     .reduce((acc, t) => acc + Number(t.valor), 0)
-
   const saiuNegocio = negocio
     .filter((t) => t.tipo === 'saida')
     .reduce((acc, t) => acc + Number(t.valor), 0)
@@ -68,7 +64,6 @@ export async function getResumoMes() {
   const entrouPessoal = pessoal
     .filter((t) => t.tipo === 'entrada')
     .reduce((acc, t) => acc + Number(t.valor), 0)
-
   const saiuPessoal = pessoal
     .filter((t) => t.tipo === 'saida')
     .reduce((acc, t) => acc + Number(t.valor), 0)
@@ -87,16 +82,15 @@ export async function getResumoMes() {
   }
 }
 
-export async function getTransacoesHoje() {
+export async function getTransacoesPorData(data: string) {
   const supabase = await createClient()
-  const hoje = new Date().toISOString().split('T')[0]
 
-  const { data, error } = await supabase
+  const { data: transacoes, error } = await supabase
     .from('transactions')
     .select('*')
-    .eq('data', hoje)
+    .eq('data', data)
     .order('criado_em', { ascending: false })
 
   if (error) throw error
-  return data ?? []
+  return transacoes ?? []
 }

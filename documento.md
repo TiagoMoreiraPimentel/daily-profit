@@ -214,6 +214,7 @@ ESTADO ATUAL:
   * Rate limit de 2 e-mails/hora do Supabase Free (resolve com domínio)
   * Teste real de assinatura R$ 1,00 pendente
   * Refresh automático das recorrentes (a confirmar)
+  * Ajustes de contraste dos botões no mobile (a confirmar)
   * Landing Page + SEO ainda não iniciada
 - Próximo passo: A DEFINIR com o usuário
 

@@ -1,4 +1,4 @@
-import { getTransacoesHoje } from '@/lib/queries'
+import { getTransacoesPorData } from '@/lib/queries'
 import { ExcluirTransacao } from './excluir-transacao'
 
 function formatarMoeda(valor: number) {
@@ -17,13 +17,13 @@ function formatarHora(dataISO: string) {
   })
 }
 
-export async function TransacaoList() {
-  const transacoes = await getTransacoesHoje()
+export async function TransacaoList({ data }: { data: string }) {
+  const transacoes = await getTransacoesPorData(data)
 
   if (transacoes.length === 0) {
     return (
       <div className="text-center py-8 text-zinc-500 text-sm">
-        Nenhuma transação registrada hoje ainda.
+        Nenhuma transação registrada neste dia.
       </div>
     )
   }
@@ -45,9 +45,7 @@ export async function TransacaoList() {
                   <p className="text-sm font-medium text-zinc-900 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
-                  <p className="text-xs text-zinc-400">
-                    {formatarHora(t.criado_em)}
-                  </p>
+                  <p className="text-xs text-zinc-400">{formatarHora(t.criado_em)}</p>
                 </div>
                 <span
                   className={`text-sm font-semibold whitespace-nowrap ${
@@ -75,9 +73,7 @@ export async function TransacaoList() {
                   <p className="text-sm text-zinc-600 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
-                  <p className="text-xs text-zinc-400">
-                    {formatarHora(t.criado_em)}
-                  </p>
+                  <p className="text-xs text-zinc-400">{formatarHora(t.criado_em)}</p>
                 </div>
                 <span className="text-sm text-zinc-500 whitespace-nowrap">
                   {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}

@@ -3,14 +3,15 @@ import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
-import { getResumoHoje, getResumoMes } from '@/lib/queries'
+import { getResumoPorData, getResumoMes } from '@/lib/queries'
 import { getStatusPlano } from '@/lib/plano'
-import { TransacaoForm } from './transacao-form'
 import { TransacaoList } from './transacao-list'
 import { LogoutButton } from './logout-button'
 import { RealtimeRefresh } from './realtime'
 import { BannerLimite } from './paywall'
 import { AssinarButton } from './assinar-button'
+import { DateNavigator } from './date-navigator'
+import { BotoesTransacao } from './botoes-transacao'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -19,7 +20,11 @@ function formatarMoeda(valor: number) {
   }).format(valor)
 }
 
-async function DashboardContent() {
+async function DashboardContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ data?: string }>
+}) {
   await connection()
 
   const supabase = await createClient()
@@ -40,14 +45,18 @@ async function DashboardContent() {
   const nomeNegocio = (profile?.tenants as { nome_negocio?: string; plano?: string } | null)?.nome_negocio
   const plano = (profile?.tenants as { nome_negocio?: string; plano?: string } | null)?.plano ?? 'free'
 
-  const [hoje, mes, statusPlano] = await Promise.all([
-    getResumoHoje(),
+  const params = await searchParams
+  const hoje = new Date().toISOString().split('T')[0]
+  const dataSelecionada = params.data || hoje
+
+  const [resumoDia, resumoMes, statusPlano] = await Promise.all([
+    getResumoPorData(dataSelecionada),
     getResumoMes(),
     getStatusPlano(),
   ])
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-32">
       <RealtimeRefresh tenantId={profile.tenant_id} />
 
       {statusPlano?.plano === 'free' &&
@@ -59,7 +68,7 @@ async function DashboardContent() {
           />
         )}
 
-      <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
+      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">
             Olá, {profile?.nome || 'usuário'} 👋
@@ -96,58 +105,62 @@ async function DashboardContent() {
         </div>
       </div>
 
+      <div className="mb-6">
+        <DateNavigator />
+      </div>
+
       <p className="text-xs text-zinc-500 uppercase tracking-wide mb-2">
-        💼 Negócio hoje
+        💼 Negócio
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div className="bg-white rounded-lg border border-zinc-200 p-4">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Entrou</p>
           <p className="text-2xl font-bold text-green-600 mt-1">
-            {formatarMoeda(hoje.entrou)}
+            {formatarMoeda(resumoDia.entrou)}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-zinc-200 p-4">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Saiu</p>
           <p className="text-2xl font-bold text-red-600 mt-1">
-            {formatarMoeda(hoje.saiu)}
+            {formatarMoeda(resumoDia.saiu)}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-zinc-200 p-4">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Lucro do dia</p>
           <p
             className={`text-2xl font-bold mt-1 ${
-              hoje.lucro >= 0 ? 'text-green-600' : 'text-red-600'
+              resumoDia.lucro >= 0 ? 'text-green-600' : 'text-red-600'
             }`}
           >
-            {formatarMoeda(hoje.lucro)}
+            {formatarMoeda(resumoDia.lucro)}
           </p>
         </div>
       </div>
 
       <p className="text-xs text-zinc-500 uppercase tracking-wide mb-2 mt-6">
-        🏠 Pessoal hoje
+        🏠 Pessoal
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
         <div className="bg-white rounded-lg border border-zinc-200 p-4">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Recebeu</p>
           <p className="text-2xl font-bold text-green-600 mt-1">
-            {formatarMoeda(hoje.entrouPessoal)}
+            {formatarMoeda(resumoDia.entrouPessoal)}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-zinc-200 p-4">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Gastou</p>
           <p className="text-2xl font-bold text-amber-600 mt-1">
-            {formatarMoeda(hoje.saiuPessoal)}
+            {formatarMoeda(resumoDia.saiuPessoal)}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-zinc-200 p-4">
           <p className="text-xs text-zinc-500 uppercase tracking-wide">Saldo pessoal</p>
           <p
             className={`text-2xl font-bold mt-1 ${
-              hoje.pessoalLiquido >= 0 ? 'text-green-600' : 'text-red-600'
+              resumoDia.pessoalLiquido >= 0 ? 'text-green-600' : 'text-red-600'
             }`}
           >
-            {formatarMoeda(hoje.pessoalLiquido)}
+            {formatarMoeda(resumoDia.pessoalLiquido)}
           </p>
         </div>
       </div>
@@ -166,57 +179,55 @@ async function DashboardContent() {
             <p className="text-xs text-zinc-500">Lucro do negócio</p>
             <p
               className={`text-2xl font-bold mt-1 ${
-                mes.lucro >= 0 ? 'text-green-600' : 'text-red-600'
+                resumoMes.lucro >= 0 ? 'text-green-600' : 'text-red-600'
               }`}
             >
-              {formatarMoeda(mes.lucro)}
+              {formatarMoeda(resumoMes.lucro)}
             </p>
           </div>
           <div>
             <p className="text-xs text-zinc-500">Pessoal líquido</p>
             <p
               className={`text-2xl font-bold mt-1 ${
-                mes.pessoalLiquido >= 0 ? 'text-green-600' : 'text-red-600'
+                resumoMes.pessoalLiquido >= 0 ? 'text-green-600' : 'text-red-600'
               }`}
             >
-              {formatarMoeda(mes.pessoalLiquido)}
+              {formatarMoeda(resumoMes.pessoalLiquido)}
             </p>
           </div>
           <div>
             <p className="text-xs text-zinc-500">Sobrou de verdade</p>
             <p
               className={`text-2xl font-bold mt-1 ${
-                mes.sobrouDeVerdade >= 0 ? 'text-green-600' : 'text-red-600'
+                resumoMes.sobrouDeVerdade >= 0 ? 'text-green-600' : 'text-red-600'
               }`}
             >
-              {formatarMoeda(mes.sobrouDeVerdade)}
+              {formatarMoeda(resumoMes.sobrouDeVerdade)}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border border-zinc-200 p-6">
-          <h2 className="text-lg font-semibold text-zinc-900 mb-4">
-            Registrar transação
-          </h2>
-          <TransacaoForm tenantId={profile.tenant_id} />
-        </div>
-
-        <div className="bg-white rounded-lg border border-zinc-200 p-6">
-          <h2 className="text-lg font-semibold text-zinc-900 mb-4">Hoje</h2>
-          <TransacaoList />
-        </div>
+      <div className="bg-white rounded-lg border border-zinc-200 p-6">
+        <h2 className="text-lg font-semibold text-zinc-900 mb-4">Histórico do dia</h2>
+        <TransacaoList data={dataSelecionada} />
       </div>
+
+      {/* FABs flutuantes (fixos no canto inferior direito) */}
+      <BotoesTransacao tenantId={profile.tenant_id} />
     </div>
   )
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ data?: string }>
+}) {
   return (
     <div className="min-h-screen bg-zinc-50 p-4 md:p-8">
       <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardContent />
+        <DashboardContent searchParams={searchParams} />
       </Suspense>
     </div>
   )
@@ -238,10 +249,7 @@ function DashboardSkeleton() {
         <div className="h-24 bg-zinc-200 rounded" />
       </div>
       <div className="h-40 bg-zinc-200 rounded mb-8" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="h-96 bg-zinc-200 rounded" />
-        <div className="h-96 bg-zinc-200 rounded" />
-      </div>
+      <div className="h-96 bg-zinc-200 rounded" />
     </div>
   )
 }
