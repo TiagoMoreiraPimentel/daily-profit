@@ -210,11 +210,13 @@ async function DashboardContent({
 
       <div className="bg-white rounded-lg border border-zinc-200 p-6">
         <h2 className="text-lg font-semibold text-zinc-900 mb-4">Histórico do dia</h2>
-        <TransacaoList data={dataSelecionada} />
+        <TransacaoList data={dataSelecionada} tenantId={profile.tenant_id} />
       </div>
 
-      {/* FABs flutuantes (fixos no canto inferior direito) */}
-      <BotoesTransacao tenantId={profile.tenant_id} />
+      <BotoesTransacao
+        tenantId={profile.tenant_id}
+        dataSelecionada={dataSelecionada}
+      />
     </div>
   )
 }

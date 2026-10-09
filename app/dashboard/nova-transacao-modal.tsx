@@ -7,22 +7,52 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+type Transacao = {
+  id: string
+  tipo: 'entrada' | 'saida'
+  valor: number
+  descricao: string | null
+  natureza: 'negocio' | 'pessoal'
+}
+
+function formatarDataBR(dataISO: string) {
+  const [ano, mes, dia] = dataISO.split('-')
+  return `${dia}/${mes}/${ano}`
+}
+
+function ehHoje(dataISO: string) {
+  const hoje = new Date().toISOString().split('T')[0]
+  return dataISO === hoje
+}
+
 export function NovaTransacaoModal({
   tenantId,
   tipoInicial,
+  dataSelecionada,
+  transacaoExistente,
   onFechar,
 }: {
   tenantId: string
   tipoInicial: 'entrada' | 'saida'
+  dataSelecionada: string // formato YYYY-MM-DD
+  transacaoExistente?: Transacao
   onFechar: () => void
 }) {
   const router = useRouter()
   const supabase = createClient()
 
-  const [tipo, setTipo] = useState<'entrada' | 'saida'>(tipoInicial)
-  const [valor, setValor] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [natureza, setNatureza] = useState<'negocio' | 'pessoal'>('negocio')
+  const modoEdicao = !!transacaoExistente
+
+  const [tipo, setTipo] = useState<'entrada' | 'saida'>(
+    transacaoExistente?.tipo ?? tipoInicial
+  )
+  const [valor, setValor] = useState(
+    transacaoExistente ? String(transacaoExistente.valor).replace('.', ',') : ''
+  )
+  const [descricao, setDescricao] = useState(transacaoExistente?.descricao ?? '')
+  const [natureza, setNatureza] = useState<'negocio' | 'pessoal'>(
+    transacaoExistente?.natureza ?? 'negocio'
+  )
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -48,19 +78,51 @@ export function NovaTransacaoModal({
       return
     }
 
-    const { error } = await supabase.from('transactions').insert({
-      tenant_id: tenantId,
-      tipo,
-      valor: valorNumerico,
-      descricao: descricao.trim() || null,
-      natureza,
-    })
+    if (modoEdicao && transacaoExistente) {
+      // Editar via API route (evita CORS no PATCH)
+      try {
+        const res = await fetch('/api/transactions/editar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: transacaoExistente.id,
+            tipo,
+            valor: valorNumerico,
+            descricao,
+            natureza,
+          }),
+        })
 
-    if (error) {
-      console.error('Erro ao inserir transação:', error)
-      setErro('Erro ao salvar. Tente novamente.')
-      setLoading(false)
-      return
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          console.error('Erro ao editar transação:', data)
+          setErro(data.error || 'Erro ao salvar. Tente novamente.')
+          setLoading(false)
+          return
+        }
+      } catch (e) {
+        console.error('Erro de rede ao editar:', e)
+        setErro('Erro de conexão. Tente novamente.')
+        setLoading(false)
+        return
+      }
+    } else {
+      // Criar nova transação direto pelo Supabase
+      const { error } = await supabase.from('transactions').insert({
+        tenant_id: tenantId,
+        tipo,
+        valor: valorNumerico,
+        descricao: descricao.trim() || null,
+        natureza,
+        data: dataSelecionada,
+      })
+
+      if (error) {
+        console.error('Erro ao inserir transação:', error)
+        setErro('Erro ao salvar. Tente novamente.')
+        setLoading(false)
+        return
+      }
     }
 
     router.refresh()
@@ -77,9 +139,23 @@ export function NovaTransacaoModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-zinc-900">
-            {tipo === 'entrada' ? '↑ Nova entrada' : '↓ Nova saída'}
-          </h2>
+          <div>
+            <h2 className="text-xl font-bold text-zinc-900">
+              {modoEdicao
+                ? '✏️ Editar transação'
+                : tipo === 'entrada'
+                ? '↑ Nova entrada'
+                : '↓ Nova saída'}
+            </h2>
+            {!modoEdicao && (
+              <p className="text-xs text-zinc-500 mt-1">
+                Será registrada em{' '}
+                <strong className="text-zinc-700">
+                  {ehHoje(dataSelecionada) ? 'hoje' : formatarDataBR(dataSelecionada)}
+                </strong>
+              </p>
+            )}
+          </div>
           <button
             type="button"
             onClick={onFechar}
@@ -190,7 +266,11 @@ export function NovaTransacaoModal({
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={loading}>
-              {loading ? 'Salvando...' : 'Registrar'}
+              {loading
+                ? 'Salvando...'
+                : modoEdicao
+                ? 'Salvar alterações'
+                : 'Registrar'}
             </Button>
           </div>
         </form>

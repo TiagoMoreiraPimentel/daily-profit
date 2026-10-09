@@ -1,5 +1,5 @@
 import { getTransacoesPorData } from '@/lib/queries'
-import { ExcluirTransacao } from './excluir-transacao'
+import { AcoesTransacao } from './acoes-transacao'
 
 function formatarMoeda(valor: number) {
   return new Intl.NumberFormat('pt-BR', {
@@ -17,7 +17,13 @@ function formatarHora(dataISO: string) {
   })
 }
 
-export async function TransacaoList({ data }: { data: string }) {
+export async function TransacaoList({
+  data,
+  tenantId,
+}: {
+  data: string
+  tenantId: string
+}) {
   const transacoes = await getTransacoesPorData(data)
 
   if (transacoes.length === 0) {
@@ -54,7 +60,16 @@ export async function TransacaoList({ data }: { data: string }) {
                 >
                   {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
                 </span>
-                <ExcluirTransacao id={t.id} descricao={t.descricao || ''} />
+                <AcoesTransacao
+                  tenantId={tenantId}
+                  transacao={{
+                    id: t.id,
+                    tipo: t.tipo,
+                    valor: Number(t.valor),
+                    descricao: t.descricao,
+                    natureza: t.natureza,
+                  }}
+                />
               </li>
             ))}
           </ul>
@@ -78,7 +93,16 @@ export async function TransacaoList({ data }: { data: string }) {
                 <span className="text-sm text-zinc-500 whitespace-nowrap">
                   {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
                 </span>
-                <ExcluirTransacao id={t.id} descricao={t.descricao || ''} />
+                <AcoesTransacao
+                  tenantId={tenantId}
+                  transacao={{
+                    id: t.id,
+                    tipo: t.tipo,
+                    valor: Number(t.valor),
+                    descricao: t.descricao,
+                    natureza: t.natureza,
+                  }}
+                />
               </li>
             ))}
           </ul>

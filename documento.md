@@ -39,6 +39,9 @@ DECISÕES TRAVADAS:
 - Webhook: configurado no painel MP com URL da Vercel
 - Rate limit de e-mails do Supabase Free: 2/hora (bloqueia cadastros)
   → solução definitiva requer domínio próprio + SMTP (Resend)
+- FABs (Floating Action Buttons) para entrada/saída no dashboard  [NOVO]
+- Navegação por data no dashboard (setas + calendário nativo)   [NOVO]
+- Modal de nova transação (substituiu formulário fixo)           [NOVO]
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
@@ -114,8 +117,12 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] Badge de plano (Free/Pro) ao lado do nome
 [x] Hora nas transações (fuso America/Sao_Paulo)
 [x] Excluir transações do dashboard
+[x] Modal de nova transação (substituiu formulário fixo)          [NOVO]
+[x] Botões FAB flutuantes (+ entrada / − saída)                    [NOVO]
+[x] Navegação por data no dashboard (setas + calendário)           [NOVO]
+[x] Cards sincronizados com a data selecionada                     [NOVO]
 [ ] Edição de transações  [ADIADO — não é crítico para MVP]
-[ ] Filtro por data  [ADIADO — não é crítico para MVP]
+[ ] Filtro por data  [ADIADO — substituído por navegação por data]
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
@@ -150,6 +157,7 @@ FASE 6 — Link de Cobrança (F4)
 FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 [x] F5: Previsão de caixa (média + tendência + recorrentes)
 [x] Tela de cadastro de contas recorrentes (/pro/recorrentes)
+[x] Refresh automático da lista de recorrentes  [NOVO]
 [x] F6: Relatório mensal de lucro (com exportação CSV)
 [x] F7: Gráfico de evolução dos últimos 6 meses
 [ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
@@ -170,6 +178,12 @@ FASE 9 — Lançamento
 [ ] Monitoramento de erros (Sentry free)
 [ ] Canal de suporte (email ou WhatsApp)
 [ ] Testes com 5-10 autônomos reais
+
+FASE 10 — Ajustes de UX Mobile  [NOVO]
+[x] Contraste dos botões (entrar, previsão, relatório, sair)
+[x] Contraste dos FABs e links como botão
+[x] Contraste dos inputs (texto digitado legível)
+[x] color-scheme: light no globals.css  [NOVO]
 
 🔹 PARTE 3 — REGRAS DE CONTINUIDADE
 
@@ -199,22 +213,23 @@ ESTADO ATUAL:
   * FASE 1: banco completo (tabelas, RLS, funções, view, triggers, seed)
   * FASE 2: auth completo (cadastro, login, recuperação, logout, proxy,
     trigger handle_new_user recriado, usuários órfãos corrigidos)
-  * FASE 3: dashboard completo (cards, form, lista com hora, realtime,
-    badge de plano, excluir transação)
+  * FASE 3: dashboard completo com navegação por data, FABs, modal de
+    transação, cards sincronizados, excluir transação
   * FASE 4: limite Free aplicado (RLS + função pode_inserir_transacao) +
     botão Assinar Pro sempre visível
   * FASE 5: Mercado Pago em produção (plano, assinatura via Brick,
     webhook testado); preço em R$ 1,00 para teste
   * FASE 7: previsão de caixa (média + tendência + recorrentes),
-    tela de recorrentes, relatório mensal, gráfico de evolução
+    tela de recorrentes com refresh automático, relatório mensal,
+    gráfico de evolução
+  * FASE 10: ajustes de UX mobile (contraste de botões e inputs)
   * Resend REMOVIDO (sem domínio ainda)
   * Deploy ativo em https://daily-profit-theta.vercel.app
+  * Commit + push feitos
 - Última decisão: preço R$ 1,00 para teste em produção
 - Pendências conhecidas:
   * Rate limit de 2 e-mails/hora do Supabase Free (resolve com domínio)
   * Teste real de assinatura R$ 1,00 pendente
-  * Refresh automático das recorrentes (a confirmar)
-  * Ajustes de contraste dos botões no mobile (a confirmar)
   * Landing Page + SEO ainda não iniciada
 - Próximo passo: A DEFINIR com o usuário
 

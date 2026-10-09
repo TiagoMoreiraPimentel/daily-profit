@@ -3,7 +3,13 @@
 import { useState } from 'react'
 import { NovaTransacaoModal } from './nova-transacao-modal'
 
-export function BotoesTransacao({ tenantId }: { tenantId: string }) {
+export function BotoesTransacao({
+  tenantId,
+  dataSelecionada,
+}: {
+  tenantId: string
+  dataSelecionada: string
+}) {
   const [modal, setModal] = useState<'entrada' | 'saida' | null>(null)
 
   return (
@@ -33,6 +39,7 @@ export function BotoesTransacao({ tenantId }: { tenantId: string }) {
         <NovaTransacaoModal
           tenantId={tenantId}
           tipoInicial={modal}
+          dataSelecionada={dataSelecionada}
           onFechar={() => setModal(null)}
         />
       )}
