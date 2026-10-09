@@ -34,10 +34,7 @@ export async function POST() {
           repetitions: 12,
           billing_day: 10,
           billing_day_proportional: true,
-          free_trial: {
-            frequency: 1,
-            frequency_type: 'months',
-          },
+          // free_trial REMOVIDO — a primeira cobrança acontece na data da assinatura
           transaction_amount: 1.0,
           currency_id: 'BRL',
         },
@@ -59,7 +56,11 @@ export async function POST() {
       )
     }
 
-    console.log('✅ Plano criado:', data.id)
+    console.log('✅ Plano criado:', {
+      id: data.id,
+      reason: data.reason,
+      amount: data.auto_recurring?.transaction_amount,
+    })
 
     return NextResponse.json({
       preapproval_plan_id: data.id,
