@@ -49,6 +49,8 @@ DECISÕES TRAVADAS:
 - Resend: domínio dailyprofit.com.br verificado + SMTP configurado
 - Rate limit de e-mails do Supabase: RESOLVIDO com SMTP próprio
 - FABs (Floating Action Buttons) para entrada/saída no dashboard
+  → Posição mobile: bottom-24 (acima do bottom nav) [ATUALIZADO]
+  → Posição desktop: bottom-6
 - Navegação por data no dashboard (setas + calendário nativo)
 - Modal de nova transação (substituiu formulário fixo)
 - UPDATE de transações via API route (para evitar CORS no PATCH)
@@ -58,7 +60,9 @@ DECISÕES TRAVADAS:
 - Contagem de transações: live (apagadas não são contabilizadas)
 - Landing page na raiz do domínio (/)
 - WhatsApp flutuante: 11 99223-3306 (suporte)
-  → Posição: CANTO SUPERIOR DIREITO em todas as telas [ATUALIZADO]
+  → Landing: canto inferior ESQUERDO (local="rodape") [ATUALIZADO]
+  → App (dashboard, previsão, relatório, configurações):
+    canto superior DIREITO (local="topo", padrão)
   → Tamanho: w-10 h-10 mobile, w-11 h-11 desktop
 - Termos e Privacidade: páginas públicas (não exigem login)
 - Footer com links (Termos, Privacidade, Suporte) no dashboard e telas Pro
@@ -74,6 +78,7 @@ DECISÕES TRAVADAS:
   → Saldo calculado dinamicamente (saldo_inicial + entradas − saídas)
   → Select de carteira no modal de transação (opcional)
   → Nome da carteira visível na lista de transações
+    - Em LINHA SEPARADA no mobile (para não cortar) [ATUALIZADO]
   → KPIs de saldo por carteira no relatório
 - Sistema de vencimento do plano Pro
   → Coluna plano_vencimento em tenants
@@ -81,15 +86,14 @@ DECISÕES TRAVADAS:
   → Alertas visuais: amarelo (≤3 dias), vermelho (vencido)
   → Expiração automática: verificada quando o usuário abre o dashboard
   → Cron REMOVIDO (decisão: sem cron por enquanto)
-- Nome da carteira aparece na linha de detalhe da transação
-- DESIGN SYSTEM (novo) [ATUALIZADO]
+- DESIGN SYSTEM
   → Paleta: emerald (marca) + zinc (neutros)
   → Fonte: Inter (substituiu Geist)
   → Cards: rounded-xl, shadow-sm, border-zinc-200/80
   → Botões: variant 'brand' (emerald) + 'danger' (red)
   → Segmented controls (tipo iOS) para tipo/natureza
   → CSS vars em globals.css
-- NAVEGAÇÃO (novo) [ATUALIZADO]
+- NAVEGAÇÃO
   → Desktop: sidebar fixa à esquerda (w-56)
     - Logo, navegação, botão Sair
     - Item ativo destacado em emerald
@@ -188,30 +192,31 @@ FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
 [x] SMTP próprio configurado (Resend) → rate limit resolvido
 
 FASE 3 — Funcionalidades Core  [CONCLUÍDA]
-[x] F1: Tela de registrar transação (entrada/saída, valor, descrição)
+[x] F1: Tela de registrar transação
 [x] F2: Campo natureza com separação visual
 [x] F3: Tela com cards de resumo (negócio + pessoal)
 [x] Listagem de transações do dia
 [x] Supabase Realtime na tela de lucro
-[x] Badge de plano (Free/Pro/Super) ao lado do nome
+[x] Badge de plano (Free/Pro/Super)
 [x] Hora nas transações (fuso America/Sao_Paulo)
 [x] Excluir transações do dashboard
-[x] Editar transações (via API route)
+[x] Editar transações
 [x] Modal de nova transação
-[x] Botões FAB flutuantes (+ entrada / − saída)
-[x] Navegação por data no dashboard
+[x] Botões FAB flutuantes (mobile: acima do bottom nav)
+[x] Navegação por data
 [x] Cards sincronizados com a data selecionada
 [x] Registrar transação na data selecionada
 [x] Select de categoria no modal (opcional)
 [x] Select de carteira no modal (opcional)
 [x] Categoria e carteira aparecem na lista
+[x] Carteira em LINHA SEPARADA no mobile [ATUALIZADO]
 [x] Saudação usa o nome do negócio
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend
 [x] Banner suave ao atingir 80% do limite
 [x] Modal de bloqueio ao atingir 100%
-[x] Botão "Assinar Pro" sempre visível no dashboard
+[x] Botão "Assinar Pro" sempre visível
 [x] Bloco AssinaturaInfo no dashboard
 [ ] Email pós-valor (7 dias de uso)  [ADIADO]
 
@@ -222,15 +227,11 @@ FASE 5 — Mercado Pago  [PAUSADA — usando WhatsApp temporariamente]
 [x] Implementar /preapproval_plan
 [x] Implementar /preapproval
 [x] Payment Brick (Checkout Bricks) no frontend
-[x] Webhook /api/webhooks/mercadopago configurado (200 OK)
+[x] Webhook configurado (200 OK)
 [x] Tratar status: authorized, paused, cancelled, pending
-[x] Proxy exclui /api/* do matcher
 [x] Migrar para credenciais de PRODUÇÃO
 [x] Webhook salva ultimo_pagamento e proxima_cobranca
-[!] ERRO CC_VAL_433: antifraude do Mercado Pago bloqueando
-    todas as tentativas de assinatura
-    → Confirmado como comportamento do antifraude
-    → Caso idêntico documentado no Reclame Aqui
+[!] ERRO CC_VAL_433: antifraude bloqueando todas as tentativas
 [PAUSADO] Payment Brick comentado no /paywall.tsx
 [PAUSADO] Fluxo de assinatura recorrente via Mercado Pago
 [ATIVO] Fluxo de assinatura via WhatsApp + liberação manual
@@ -256,7 +257,7 @@ FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 FASE 8 — Landing Page + SEO  [CONCLUÍDA — parcial]
 [x] Landing page na raiz do site
 [x] Página de preços
-[x] WhatsApp flutuante na landing
+[x] WhatsApp flutuante na landing (canto inferior esquerdo) [ATUALIZADO]
 [ ] Páginas SEO: "controle financeiro para MEI"
 [ ] Google Search Console
 [ ] Analytics (Plausible ou GA4)
@@ -264,8 +265,8 @@ FASE 8 — Landing Page + SEO  [CONCLUÍDA — parcial]
 FASE 9 — Lançamento  [EM ANDAMENTO]
 [x] Domínio customizado na Vercel
 [x] SSL (automático)
-[x] Termos de uso (placeholder, público)
-[x] Política de privacidade (placeholder, público)
+[x] Termos de uso (placeholder)
+[x] Política de privacidade (placeholder)
 [x] Footer com links
 [x] Canal de suporte (WhatsApp configurado)
 [ ] Backup automático do Supabase
@@ -277,7 +278,9 @@ FASE 10 — Ajustes de UX Mobile  [CONCLUÍDA]
 [x] Contraste dos FABs
 [x] Contraste dos inputs
 [x] color-scheme: light no globals.css
-[x] WhatsApp flutuante no canto superior direito
+[x] FABs acima do bottom nav no mobile [ATUALIZADO]
+[x] Carteira em linha separada no mobile [ATUALIZADO]
+[x] WhatsApp reposicionado (landing: baixo esquerda; app: topo direita) [ATUALIZADO]
 
 FASE 11 — Painel Admin  [CONCLUÍDA]
 [x] Adicionar plano 'super'
@@ -327,11 +330,11 @@ FASE 14 — Sistema de Carteiras  [CONCLUÍDA]
 [x] Criar endpoints /api/carteiras
 [x] Criar aba "Carteiras" em /configuracoes
 [x] Select de carteira no modal
-[x] Nome da carteira na lista
+[x] Nome da carteira na lista (linha separada no mobile)
 [x] KPIs de saldo por carteira em /pro/relatorio
 [x] Saldo calculado dinamicamente
 
-FASE 15 — Redesign Visual  [CONCLUÍDA]  [NOVA]
+FASE 15 — Redesign Visual  [CONCLUÍDA]
 [x] Paleta emerald + zinc em globals.css
 [x] Fonte Inter (substituiu Geist) em layout.tsx
 [x] Atualizar Button (variants brand + danger)
@@ -342,7 +345,7 @@ FASE 15 — Redesign Visual  [CONCLUÍDA]  [NOVA]
 [x] Bottom nav mobile (no sidebar-nav.tsx)
 [x] Layouts: dashboard, pro, configuracoes
 [x] Redesenhar app/dashboard/page.tsx
-[x] Redesenhar botoes-transacao.tsx (FABs com sombra colorida)
+[x] Redesenhar botoes-transacao.tsx (FABs)
 [x] Redesenhar date-navigator.tsx
 [x] Redesenhar transacao-list.tsx
 [x] Redesenhar nova-transacao-modal.tsx (segmented controls)
@@ -350,7 +353,7 @@ FASE 15 — Redesign Visual  [CONCLUÍDA]  [NOVA]
 [x] Redesenhar app/pro/relatorio/content.tsx
 [x] Redesenhar app/pro/recorrentes/content.tsx
 [x] Redesenhar app/configuracoes/content.tsx
-[x] WhatsApp no canto superior direito
+[x] WhatsApp reposicionado: landing (baixo esquerda), app (topo direita)
 
 🔹 PARTE 3 — REGRAS DE CONTINUIDADE
 
@@ -379,12 +382,12 @@ ESTADO ATUAL:
 - Concluído até agora:
   * FASE 0 a 14: banco, auth, dashboard, Pro, admin, categorias,
     WhatsApp, carteiras, vencimento
-  * FASE 15: redesign completo com sidebar + bottom nav + paleta emerald
+  * FASE 15: redesign completo + ajustes mobile (FABs, carteira, WhatsApp)
   * Domínio dailyprofit.com.br funcionando + SSL
   * Resend verificado + SMTP configurado
   * Deploy ativo
   * Commit + push feitos
-- Última decisão: WhatsApp no canto superior direito
+- Última decisão: WhatsApp na landing (baixo esquerda) e no app (topo direita)
 - Pendências conhecidas:
   * SEO (páginas, Google Search Console, Analytics)
   * Reativar Mercado Pago quando o antifraude liberar
