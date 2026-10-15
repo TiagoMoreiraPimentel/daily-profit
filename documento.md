@@ -17,9 +17,9 @@ DECISÕES TRAVADAS:
 - Modelo de cobrança (temporário): assinatura via WhatsApp
   → usuário clica "Assinar Pro" → abre WhatsApp com mensagem pronta
   → você gera link de pagamento no app do Mercado Pago (Pix/cartão/boleto)
-  → cliente paga → você libera acesso manualmente pelo painel /admin  [NOVO]
+  → cliente paga → você libera acesso manualmente pelo painel /admin
 - Modelo de cobrança (futuro): assinatura recorrente via Mercado Pago (/preapproval)
-  → código do Payment Brick mantido no /paywall.tsx (comentado)  [PAUSADO]
+  → código do Payment Brick mantido no /paywall.tsx (comentado) [PAUSADO]
   → motivo da pausa: erro CC_VAL_433 bloqueando todas as tentativas
 - Multi-tenant: shared schema com tenant_id + RLS no Supabase
 - Banco + Auth + Realtime: Supabase
@@ -66,12 +66,26 @@ DECISÕES TRAVADAS:
 - Termos e Privacidade: páginas públicas (não exigem login)
 - Footer com links (Termos, Privacidade, Suporte) no dashboard e telas Pro
 - Categorias por tenant (cada usuário tem as próprias)
-  → Seeded com 15 categorias no cadastro; usuário pode renomear/excluir/criar
-- Tela /configuracoes: gerenciamento de categorias
+- Tela /configuracoes: gerenciamento de categorias + carteiras [ATUALIZADO]
 - CSV exportado com BOM UTF-8 + separador `;` (padrão BR)
 - Gráfico de entradas/saídas (donut) no relatório
 - Gráfico unificado por categoria (lista + barras)
-- Saudação no dashboard usa nome do negócio (não o e-mail)  [NOVO]
+- Saudação no dashboard usa nome do negócio (não o e-mail)
+- Sistema de carteiras por tenant [NOVO]
+  → Tabela carteiras (nome, tipo, saldo_inicial, cor)
+  → Tipos: banco, digital, dinheiro, outro
+  → Saldo calculado dinamicamente (saldo_inicial + entradas − saídas)
+  → Select de carteira no modal de transação (opcional)
+  → Nome da carteira visível na lista de transações
+  → KPIs de saldo por carteira no relatório
+- Sistema de vencimento do plano Pro [NOVO]
+  → Coluna plano_vencimento em tenants
+  → Painel admin define data de início; vencimento = +1 mês
+  → Alertas visuais: amarelo (≤3 dias), vermelho (vencido)
+  → Expiração automática: verificada quando o usuário abre o dashboard
+  → Função SQL expirar_planos_vencidos() (mantida, cron REMOVIDO) [ATUALIZADO]
+  → Sem cron: expiração só roda quando o usuário acessa (decisão atual)
+- Nome da carteira aparece na linha de detalhe da transação [NOVO]
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
@@ -85,6 +99,8 @@ FUNCIONALIDADES CORE:
 - F9: Landing page na raiz                                       [x] FEITO
 - F10: Categorias personalizáveis por tenant                     [x] FEITO
 - F11: Assinatura via WhatsApp (fluxo temporário)                [x] FEITO
+- F12: Sistema de carteiras (bancos/contas/dinheiro)             [x] FEITO
+- F13: Vencimento e expiração automática do Pro                  [x] FEITO
 
 REGRAS DE NEGÓCIO:
 - Limite do Free aplicado no BACKEND, não no frontend
@@ -94,6 +110,10 @@ REGRAS DE NEGÓCIO:
 - Painel admin só acessível para plano 'super'
 - Contagem de transações é live (reflete o estado atual do banco)
 - Telas Pro (previsão, relatório, recorrentes) acessíveis para pro E super
+- Saldo de carteira: calculado dinamicamente, nunca armazenado
+- Carteira é opcional na transação
+- Pro vence e volta para Free quando `plano_vencimento < hoje`
+- Expiração roda no dashboard (não há cron)
 
 🔹 PARTE 2 — CHECKLIST DE IMPLANTAÇÃO
 
@@ -115,12 +135,16 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Rodar SQL das tabelas: tenants, users, transactions, recurring,
     payment_links, subscriptions, categorias_padrao
 [x] Criar tabela categorias (por tenant) + RLS
+[x] Criar tabela carteiras (por tenant) + RLS  [NOVO]
+[x] Adicionar coluna carteira_id em transactions  [NOVO]
+[x] Adicionar coluna plano_vencimento em tenants  [NOVO]
 [x] Habilitar RLS em todas as tabelas com tenant_id
 [x] Criar políticas RLS (usando get_user_tenant())
 [x] Criar função count_monthly_transactions()
 [x] Criar função get_user_tenant()
-[x] Criar função pode_inserir_transacao()
+[x] Criar função pode_inserir_transacao() (inclui super)  [CORRIGIDO]
 [x] Criar função is_super()
+[x] Criar função expirar_planos_vencidos()  [NOVO]
 [x] Criar view vw_lucro_diario
 [x] Criar trigger updated_at
 [x] Seed de categorias padrão (15 categorias)
@@ -169,8 +193,9 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] Cards sincronizados com a data selecionada
 [x] Registrar transação na data selecionada (não só hoje)
 [x] Select de categoria no modal (opcional)
-[x] Categoria aparece na lista de transações
-[x] Saudação usa o nome do negócio (não o e-mail)  [NOVO]
+[x] Select de carteira no modal (opcional)  [NOVO]
+[x] Categoria e carteira aparecem na lista  [ATUALIZADO]
+[x] Saudação usa o nome do negócio (não o e-mail)
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
@@ -200,7 +225,7 @@ FASE 5 — Mercado Pago  [PAUSADA — usando WhatsApp temporariamente]
 [PAUSADO] Payment Brick comentado no /paywall.tsx (guardado para futuro)
 [PAUSADO] Fluxo de assinatura recorrente via Mercado Pago
 [ATIVO] Fluxo de assinatura via WhatsApp + liberação manual
-[ ] Reativar Mercado Pago quando o antifraude liberar (ou com apoio do suporte)
+[ ] Reativar Mercado Pago quando o antifraude liberar
 
 FASE 6 — Link de Cobrança (F4)  [REMOVIDA]
 [REMOVIDO] Motivo: exige OAuth + Split de Pagamentos (inviável para MVP).
@@ -215,6 +240,7 @@ FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 [x] F7: Gráfico de evolução dos últimos 6 meses
 [x] Gráfico de entradas/saídas (donut)
 [x] Gráfico unificado por categoria (lista + barras)
+[x] KPIs de saldo por carteira  [NOVO]
 [x] Telas Pro acessíveis para super também
 [ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
 
@@ -260,6 +286,13 @@ FASE 11 — Painel Admin  [CONCLUÍDA]
 [x] Coluna ultimo_pagamento em subscriptions
 [x] Colunas Status/Últ.pgto/Próx.venc. no painel admin
 [x] Bloco AssinaturaInfo no dashboard do usuário
+[x] Coluna plano_vencimento em tenants  [NOVO]
+[x] Input de data para definir vencimento  [NOVO]
+[x] Cálculo automático do vencimento (+1 mês)  [NOVO]
+[x] Alertas visuais: amarelo (≤3d), vermelho (vencido)  [NOVO]
+[x] Expiração automática (verificação no dashboard)  [NOVO]
+[x] Função SQL expirar_planos_vencidos()  [NOVO]
+[REMOVIDO] Cron job diário (decisão: sem cron por enquanto)
 [ ] Badge "Concedido" para Pro sem assinatura  [MELHORIA FUTURA]
 [ ] Coluna "Última atividade" no painel admin  [MELHORIA FUTURA]
 
@@ -275,7 +308,7 @@ FASE 12 — Categorias Personalizáveis  [CONCLUÍDA]
 [x] Select de categoria no modal de nova transação
 [x] Categoria aparece na lista de transações
 
-FASE 13 — Assinatura via WhatsApp  [CONCLUÍDA]  [NOVA]
+FASE 13 — Assinatura via WhatsApp  [CONCLUÍDA]
 [x] Substituir botão "Assinar Pro" por link do WhatsApp
 [x] Mensagem pré-preenchida no WhatsApp
 [x] Código do Payment Brick comentado no /paywall.tsx
@@ -283,6 +316,18 @@ FASE 13 — Assinatura via WhatsApp  [CONCLUÍDA]  [NOVA]
 [x] ModalLimiteAtingido com botão de WhatsApp
 [x] AssinaturaInfo mostrando "Plano Pro ativo" mesmo sem assinatura MP
 [x] Preço voltou para R$ 19,90 nos textos
+
+FASE 14 — Sistema de Carteiras  [CONCLUÍDA]  [NOVA]
+[x] Criar tabela carteiras (por tenant) + RLS
+[x] Adicionar coluna carteira_id em transactions
+[x] Criar app/api/carteiras/route.ts (GET + POST)
+[x] Criar app/api/carteiras/[id]/route.ts (PATCH + DELETE)
+[x] Criar app/api/carteiras/saldos/route.ts
+[x] Criar aba "Carteiras" em /configuracoes (CRUD + busca + cor)
+[x] Select de carteira no modal de nova transação (opcional)
+[x] Nome da carteira na lista de transações
+[x] KPIs de saldo por carteira em /pro/relatorio
+[x] Saldo calculado dinamicamente (saldo_inicial + entradas − saídas)
 
 🔹 PARTE 3 — REGRAS DE CONTINUIDADE
 
@@ -307,26 +352,29 @@ FORMATO DE RESPOSTA PADRÃO:
 
 ESTADO ATUAL:
 - Fase: 5 (Mercado Pago) — PAUSADA (antifraude bloqueando)
-- Fase ativa: 13 (Assinatura via WhatsApp) — CONCLUÍDA
+- Fase ativa: 14 (Sistema de Carteiras) — CONCLUÍDA
 - Concluído até agora:
   * FASE 0: Supabase + Mercado Pago + Vercel + GitHub + domínio funcionando
-  * FASE 1: banco completo (RLS de super removida, tabela categorias)
+  * FASE 1: banco completo (tabelas categorias e carteiras, plano_vencimento)
   * FASE 2: auth completo (SMTP configurado, rate limit resolvido)
-  * FASE 3: dashboard completo (com select de categoria, saudação com nome do negócio)
+  * FASE 3: dashboard completo (categoria + carteira no modal,
+    nome da carteira na lista, saudação com nome do negócio)
   * FASE 4: limite Free + botão Assinar + bloco AssinaturaInfo
   * FASE 5: Mercado Pago PAUSADO (CC_VAL_433 do antifraude)
-  * FASE 7: previsão, recorrentes, relatório, CSV melhorado, gráficos
+  * FASE 7: previsão, recorrentes, relatório, CSV melhorado, gráficos,
+    saldos por carteira
   * FASE 8: landing page
   * FASE 9: termos e privacidade, SSL, WhatsApp
   * FASE 10: UX mobile
-  * FASE 11: painel admin completo
+  * FASE 11: painel admin completo (vencimento, alertas, expiração)
   * FASE 12: categorias personalizáveis
   * FASE 13: assinatura via WhatsApp + liberação manual
+  * FASE 14: sistema de carteiras completo
   * Domínio dailyprofit.com.br funcionando + SSL
   * Resend verificado + SMTP configurado
   * Deploy ativo
   * Commit + push feitos
-- Última decisão: pausar Mercado Pago, usar WhatsApp como fluxo de assinatura
+- Última decisão: cron REMOVIDO (expiração roda só no dashboard)
 - Pendências conhecidas:
   * SEO (páginas, Google Search Console, Analytics)
   * Reativar Mercado Pago quando o antifraude liberar

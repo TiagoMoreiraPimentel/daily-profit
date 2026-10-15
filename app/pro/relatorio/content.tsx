@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { ExportarCSV } from './exportar-csv'
 import { GraficoEvolucao } from './grafico'
@@ -145,128 +144,119 @@ export async function RelatorioContent() {
       : 1
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-900">
-            ← Voltar ao dashboard
-          </Link>
+    <div className="max-w-4xl mx-auto p-4 md:p-8 pb-24 md:pb-8">
+      <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900 mb-2">Relatório Mensal</h1>
+          <p className="text-zinc-500 text-sm capitalize">{mesAtual}</p>
         </div>
-
-        <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900 mb-2">Relatório Mensal</h1>
-            <p className="text-zinc-500 text-sm capitalize">{mesAtual}</p>
-          </div>
-          <ExportarCSV
-            dados={dados}
-            mes={mesAtual}
-            nomeNegocio={dados.nomeNegocio}
-          />
-        </div>
-
-        {/* Saldos por carteira */}
-        <SaldosCarteiras />
-
-        {/* Gráfico de entradas vs. saídas */}
-        <div className="bg-white rounded-lg border border-zinc-200 p-6 mb-8">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide mb-6">
-            🥧 Entradas e saídas do mês
-          </p>
-          <GraficoEntradasSaidas
-            entradas={dados.negocio.entrou}
-            saidas={dados.negocio.saiu}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-lg border border-zinc-200 p-4">
-            <p className="text-xs text-zinc-500 uppercase tracking-wide">Lucro do negócio</p>
-            <p
-              className={`text-2xl font-bold mt-1 ${
-                dados.negocio.lucro >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {formatarMoeda(dados.negocio.lucro)}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg border border-zinc-200 p-4">
-            <p className="text-xs text-zinc-500 uppercase tracking-wide">Pessoal líquido</p>
-            <p
-              className={`text-2xl font-bold mt-1 ${
-                dados.pessoal.liquido >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {formatarMoeda(dados.pessoal.liquido)}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg border border-zinc-200 p-4">
-            <p className="text-xs text-zinc-500 uppercase tracking-wide">Sobrou de verdade</p>
-            <p
-              className={`text-2xl font-bold mt-1 ${
-                dados.sobrouDeVerdade >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {formatarMoeda(dados.sobrouDeVerdade)}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-zinc-200 p-6 mb-8">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
-            📈 Evolução dos últimos 6 meses
-          </p>
-          <GraficoEvolucao dados={dados.dadosGrafico} />
-        </div>
-
-        <div className="bg-white rounded-lg border border-zinc-200 p-6">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide mb-6">
-            📊 Por categoria (negócio)
-          </p>
-
-          {categoriasOrdenadas.length === 0 ? (
-            <p className="text-sm text-zinc-500 text-center py-6">
-              Nenhuma transação de negócio registrada neste mês.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {categoriasOrdenadas.map((cat) => {
-                const percentual = (Math.abs(cat.saldo) / maiorAbsoluto) * 100
-                const positivo = cat.saldo >= 0
-
-                return (
-                  <div key={cat.nome}>
-                    <div className="flex items-center justify-between text-sm mb-1.5">
-                      <span className="font-medium text-zinc-900 truncate pr-3">
-                        {cat.nome}
-                      </span>
-                      <span
-                        className={`font-semibold whitespace-nowrap ${
-                          positivo ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {positivo ? '+' : '−'} {formatarMoeda(Math.abs(cat.saldo))}
-                      </span>
-                    </div>
-                    <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          positivo ? 'bg-green-500' : 'bg-red-500'
-                        }`}
-                        style={{ width: `${percentual}%` }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        <AppFooter />
+        <ExportarCSV
+          dados={dados}
+          mes={mesAtual}
+          nomeNegocio={dados.nomeNegocio}
+        />
       </div>
 
-      <WhatsAppButton posicao="esquerda" tamanho="pequeno" />
+      {/* Saldos por carteira */}
+      <SaldosCarteiras />
+
+      {/* Gráfico de entradas vs. saídas */}
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6 mb-8">
+        <p className="text-xs text-zinc-500 uppercase tracking-wide mb-6">
+          🥧 Entradas e saídas do mês
+        </p>
+        <GraficoEntradasSaidas
+          entradas={dados.negocio.entrou}
+          saidas={dados.negocio.saiu}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-4">
+          <p className="text-xs text-zinc-500 uppercase tracking-wide">Lucro do negócio</p>
+          <p
+            className={`text-2xl font-bold mt-1 tracking-tight ${
+              dados.negocio.lucro >= 0 ? 'text-emerald-600' : 'text-red-600'
+            }`}
+          >
+            {formatarMoeda(dados.negocio.lucro)}
+          </p>
+        </div>
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-4">
+          <p className="text-xs text-zinc-500 uppercase tracking-wide">Pessoal líquido</p>
+          <p
+            className={`text-2xl font-bold mt-1 tracking-tight ${
+              dados.pessoal.liquido >= 0 ? 'text-emerald-600' : 'text-red-600'
+            }`}
+          >
+            {formatarMoeda(dados.pessoal.liquido)}
+          </p>
+        </div>
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-4">
+          <p className="text-xs text-zinc-500 uppercase tracking-wide">Sobrou de verdade</p>
+          <p
+            className={`text-2xl font-bold mt-1 tracking-tight ${
+              dados.sobrouDeVerdade >= 0 ? 'text-emerald-600' : 'text-red-600'
+            }`}
+          >
+            {formatarMoeda(dados.sobrouDeVerdade)}
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6 mb-8">
+        <p className="text-xs text-zinc-500 uppercase tracking-wide mb-4">
+          📈 Evolução dos últimos 6 meses
+        </p>
+        <GraficoEvolucao dados={dados.dadosGrafico} />
+      </div>
+
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6">
+        <p className="text-xs text-zinc-500 uppercase tracking-wide mb-6">
+          📊 Por categoria (negócio)
+        </p>
+
+        {categoriasOrdenadas.length === 0 ? (
+          <p className="text-sm text-zinc-500 text-center py-6">
+            Nenhuma transação de negócio registrada neste mês.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {categoriasOrdenadas.map((cat) => {
+              const percentual = (Math.abs(cat.saldo) / maiorAbsoluto) * 100
+              const positivo = cat.saldo >= 0
+
+              return (
+                <div key={cat.nome}>
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="font-medium text-zinc-900 truncate pr-3">
+                      {cat.nome}
+                    </span>
+                    <span
+                      className={`font-semibold whitespace-nowrap ${
+                        positivo ? 'text-emerald-600' : 'text-red-600'
+                      }`}
+                    >
+                      {positivo ? '+' : '−'} {formatarMoeda(Math.abs(cat.saldo))}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        positivo ? 'bg-emerald-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${percentual}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <AppFooter />
+
     </div>
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,51 +38,43 @@ export function ConfiguracoesContent() {
   const [aba, setAba] = useState<'categorias' | 'carteiras'>('categorias')
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-900">
-            ← Voltar ao dashboard
-          </Link>
-        </div>
+    <div className="max-w-4xl mx-auto p-4 md:p-8 pb-24 md:pb-8">
+      <h1 className="text-2xl font-bold text-zinc-900 mb-2">⚙️ Configurações</h1>
+      <p className="text-zinc-500 text-sm mb-6">
+        Personalize categorias e carteiras (bancos, contas digitais, dinheiro).
+      </p>
 
-        <h1 className="text-2xl font-bold text-zinc-900 mb-2">⚙️ Configurações</h1>
-        <p className="text-zinc-500 text-sm mb-6">
-          Personalize categorias e carteiras (bancos, contas digitais, dinheiro).
-        </p>
-
-        {/* Abas */}
-        <div className="border-b border-zinc-200 mb-6 flex gap-1">
-          <button
-            onClick={() => setAba('categorias')}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-              aba === 'categorias'
-                ? 'border-zinc-900 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            📋 Categorias
-          </button>
-          <button
-            onClick={() => setAba('carteiras')}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-              aba === 'carteiras'
-                ? 'border-zinc-900 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
-            }`}
-          >
-            💳 Carteiras
-          </button>
-        </div>
-
-        {aba === 'categorias' ? <CategoriasPanel /> : <CarteirasPanel />}
+      {/* Abas */}
+      <div className="border-b border-zinc-200 mb-6 flex gap-1">
+        <button
+          onClick={() => setAba('categorias')}
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+            aba === 'categorias'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          📋 Categorias
+        </button>
+        <button
+          onClick={() => setAba('carteiras')}
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+            aba === 'carteiras'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          💳 Carteiras
+        </button>
       </div>
+
+      {aba === 'categorias' ? <CategoriasPanel /> : <CarteirasPanel />}
     </div>
   )
 }
 
 // =====================================================
-// PAINEL DE CATEGORIAS (existente)
+// PAINEL DE CATEGORIAS
 // =====================================================
 function CategoriasPanel() {
   const [categorias, setCategorias] = useState<Categoria[]>([])
@@ -182,16 +173,16 @@ function CategoriasPanel() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white rounded-lg border border-zinc-200 p-6">
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-zinc-900 mb-4">Nova categoria</h2>
 
         {erro && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg mb-4">
             ❌ {erro}
           </div>
         )}
         {sucesso && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded mb-4">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm p-3 rounded-lg mb-4">
             ✅ {sucesso}
           </div>
         )}
@@ -199,14 +190,14 @@ function CategoriasPanel() {
         <form onSubmit={criar} className="space-y-4">
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-100 rounded-xl">
               <button
                 type="button"
                 onClick={() => setTipo('entrada')}
-                className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                   tipo === 'entrada'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-zinc-600 hover:text-zinc-900'
                 }`}
               >
                 ↑ Entrada
@@ -214,10 +205,10 @@ function CategoriasPanel() {
               <button
                 type="button"
                 onClick={() => setTipo('saida')}
-                className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                   tipo === 'saida'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'text-zinc-600 hover:text-zinc-900'
                 }`}
               >
                 ↓ Saída
@@ -227,14 +218,14 @@ function CategoriasPanel() {
 
           <div className="space-y-2">
             <Label>Natureza</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-100 rounded-xl">
               <button
                 type="button"
                 onClick={() => setNatureza('negocio')}
-                className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                   natureza === 'negocio'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                    ? 'bg-white text-zinc-900 shadow-sm'
+                    : 'text-zinc-600 hover:text-zinc-900'
                 }`}
               >
                 💼 Negócio
@@ -242,10 +233,10 @@ function CategoriasPanel() {
               <button
                 type="button"
                 onClick={() => setNatureza('pessoal')}
-                className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                   natureza === 'pessoal'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                    ? 'bg-white text-zinc-900 shadow-sm'
+                    : 'text-zinc-600 hover:text-zinc-900'
                 }`}
               >
                 🏠 Pessoal
@@ -265,13 +256,13 @@ function CategoriasPanel() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={salvando}>
+          <Button type="submit" variant="brand" className="w-full" disabled={salvando}>
             {salvando ? 'Salvando...' : 'Criar categoria'}
           </Button>
         </form>
       </div>
 
-      <div className="bg-white rounded-lg border border-zinc-200 p-6">
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-zinc-900 mb-4">
           Suas categorias ({categorias.length})
         </h2>
@@ -296,7 +287,7 @@ function CategoriasPanel() {
 }
 
 // =====================================================
-// PAINEL DE CARTEIRAS (novo)
+// PAINEL DE CARTEIRAS
 // =====================================================
 function CarteirasPanel() {
   const [carteiras, setCarteiras] = useState<Carteira[]>([])
@@ -308,7 +299,7 @@ function CarteirasPanel() {
   const [nome, setNome] = useState('')
   const [tipo, setTipo] = useState<'banco' | 'digital' | 'dinheiro' | 'outro'>('banco')
   const [saldoInicial, setSaldoInicial] = useState('')
-  const [cor, setCor] = useState('#3b82f6')
+  const [cor, setCor] = useState('#10b981')
 
   const carregar = useCallback(async () => {
     setLoading(true)
@@ -386,16 +377,16 @@ function CarteirasPanel() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white rounded-lg border border-zinc-200 p-6">
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-zinc-900 mb-4">Nova carteira</h2>
 
         {erro && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg mb-4">
             ❌ {erro}
           </div>
         )}
         {sucesso && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded mb-4">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm p-3 rounded-lg mb-4">
             ✅ {sucesso}
           </div>
         )}
@@ -421,9 +412,9 @@ function CarteirasPanel() {
                   key={t.value}
                   type="button"
                   onClick={() => setTipo(t.value as any)}
-                  className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                  className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                     tipo === t.value
-                      ? 'bg-zinc-900 text-white'
+                      ? 'bg-zinc-900 text-white shadow-sm'
                       : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                   }`}
                 >
@@ -455,17 +446,17 @@ function CarteirasPanel() {
               type="color"
               value={cor}
               onChange={(e) => setCor(e.target.value)}
-              className="h-10 w-full rounded-md border border-zinc-300 cursor-pointer"
+              className="h-10 w-full rounded-lg border border-zinc-300 cursor-pointer"
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={salvando}>
+          <Button type="submit" variant="brand" className="w-full" disabled={salvando}>
             {salvando ? 'Salvando...' : 'Criar carteira'}
           </Button>
         </form>
       </div>
 
-      <div className="bg-white rounded-lg border border-zinc-200 p-6">
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-zinc-900 mb-4">
           Suas carteiras ({carteiras.length})
         </h2>

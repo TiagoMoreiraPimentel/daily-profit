@@ -1,13 +1,11 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import Link from 'next/link'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
 import { getResumoPorData, getResumoMes } from '@/lib/queries'
 import { getStatusPlano } from '@/lib/plano'
 import { TransacaoList } from './transacao-list'
-import { LogoutButton } from './logout-button'
 import { RealtimeRefresh } from './realtime'
 import { BannerLimite } from './paywall'
 import { AssinarButton } from './assinar-button'
@@ -46,11 +44,11 @@ async function DashboardContent({
     return <p className="text-red-600">Erro: perfil sem tenant associado.</p>
   }
 
-  const nomeNegocio = (profile?.tenants as { nome_negocio?: string; plano?: string } | null)?.nome_negocio
-  let plano = (profile?.tenants as { nome_negocio?: string; plano?: string; plano_vencimento?: string } | null)?.plano ?? 'free'
-  const planoVencimento = (profile?.tenants as { nome_negocio?: string; plano?: string; plano_vencimento?: string } | null)?.plano_vencimento
+  const nomeNegocio = (profile?.tenants as { nome_negocio?: string } | null)?.nome_negocio
+  let plano = (profile?.tenants as { plano?: string; plano_vencimento?: string } | null)?.plano ?? 'free'
+  const planoVencimento = (profile?.tenants as { plano_vencimento?: string } | null)?.plano_vencimento
 
-  // Verifica se o plano Pro venceu (comparação com a data de hoje)
+  // Verifica vencimento
   if (plano === 'pro' && planoVencimento) {
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
@@ -60,23 +58,17 @@ async function DashboardContent({
     dataVenc.setHours(0, 0, 0, 0)
 
     if (dataVenc < hoje) {
-      // Plano venceu: rebaixa para free usando service_role
       try {
         const supabaseAdmin = createAdminClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
           { auth: { autoRefreshToken: false, persistSession: false } }
         )
-
         await supabaseAdmin
           .from('tenants')
           .update({ plano: 'free', plano_vencimento: null })
           .eq('id', profile.tenant_id)
-
-        // Atualiza a variável local para refletir a mudança imediatamente
         plano = 'free'
-
-        console.log(`⏰ Plano Pro vencido — Tenant ${profile.tenant_id} → free`)
       } catch (e) {
         console.error('Erro ao expirar plano:', e)
       }
@@ -98,7 +90,7 @@ async function DashboardContent({
   const ehFree = plano === 'free'
 
   return (
-    <div className="max-w-4xl mx-auto pb-32">
+    <div className="max-w-5xl mx-auto p-4 md:p-8 pb-32">
       <RealtimeRefresh tenantId={profile.tenant_id} />
 
       {ehFree &&
@@ -113,83 +105,96 @@ async function DashboardContent({
 
       <AssinaturaInfo />
 
-      <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">
-            Olá, {nomeNegocio || profile?.nome || 'usuário'} 👋
-          </h1>
-          <p className="text-zinc-500 mt-1 text-sm flex items-center gap-2">
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                ehSuper
-                  ? 'bg-purple-100 text-purple-700'
-                  : ehPro
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-zinc-100 text-zinc-600'
-              }`}
-            >
-              {ehSuper ? '⭐ Super' : ehPro ? '⭐ Pro' : 'Free'}
-            </span>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {ehSuper && (
-            <Link
-              href="/admin"
-              className="text-xs px-3 py-2 rounded-md border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 transition font-medium"
-            >
-              🔧 Admin
-            </Link>
-          )}
+      {/* HEADER — só saudação */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+          Olá, {nomeNegocio || 'usuário'} 👋
+        </h1>
+        <div className="mt-2 flex items-center gap-2 flex-wrap">
+          <span
+            className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+              ehSuper
+                ? 'bg-violet-100 text-violet-700'
+                : ehPro
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-zinc-100 text-zinc-600'
+            }`}
+          >
+            {ehSuper ? '⭐ Super' : ehPro ? '⭐ Pro' : 'Free'}
+          </span>
           {ehFree && <AssinarButton />}
-          <Link
-            href="/pro/previsao"
-            className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
-          >
-            📊 Previsão
-          </Link>
-          <Link
-            href="/pro/relatorio"
-            className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
-          >
-            📄 Relatório
-          </Link>
-          <Link
-            href="/configuracoes"
-            className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
-          >
-            ⚙️ Configurações
-          </Link>
-          <LogoutButton />
         </div>
       </div>
 
+      {/* DATE NAVIGATOR */}
       <div className="mb-6">
         <DateNavigator />
       </div>
 
-      <p className="text-xs text-zinc-500 uppercase tracking-wide mb-2">
-        💼 Negócio
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div className="bg-white rounded-lg border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide">Entrou</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">
+      {/* CARDS — NEGÓCIO */}
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-lg">💼</span>
+        <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-wide">
+          Negócio
+        </h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
+              Entrou
+            </p>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+              ↑
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-emerald-600 tracking-tight">
             {formatarMoeda(resumoDia.entrou)}
           </p>
         </div>
-        <div className="bg-white rounded-lg border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide">Saiu</p>
-          <p className="text-2xl font-bold text-red-600 mt-1">
+
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
+              Saiu
+            </p>
+            <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-sm">
+              ↓
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-red-600 tracking-tight">
             {formatarMoeda(resumoDia.saiu)}
           </p>
         </div>
-        <div className="bg-white rounded-lg border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide">Lucro do dia</p>
+
+        <div
+          className={`rounded-xl border shadow-sm p-5 hover:shadow-md transition-shadow ${
+            resumoDia.lucro >= 0
+              ? 'bg-emerald-50 border-emerald-100'
+              : 'bg-red-50 border-red-100'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <p
+              className={`text-xs font-medium uppercase tracking-wider ${
+                resumoDia.lucro >= 0 ? 'text-emerald-700' : 'text-red-700'
+              }`}
+            >
+              Lucro do dia
+            </p>
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
+                resumoDia.lucro >= 0
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
+              💰
+            </div>
+          </div>
           <p
-            className={`text-2xl font-bold mt-1 ${
-              resumoDia.lucro >= 0 ? 'text-green-600' : 'text-red-600'
+            className={`text-3xl font-bold tracking-tight ${
+              resumoDia.lucro >= 0 ? 'text-emerald-700' : 'text-red-700'
             }`}
           >
             {formatarMoeda(resumoDia.lucro)}
@@ -197,27 +202,39 @@ async function DashboardContent({
         </div>
       </div>
 
-      <p className="text-xs text-zinc-500 uppercase tracking-wide mb-2 mt-6">
-        🏠 Pessoal
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-        <div className="bg-white rounded-lg border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide">Recebeu</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">
+      {/* CARDS — PESSOAL */}
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-lg">🏠</span>
+        <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-wide">
+          Pessoal
+        </h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-3">
+            Recebeu
+          </p>
+          <p className="text-2xl font-bold text-emerald-600 tracking-tight">
             {formatarMoeda(resumoDia.entrouPessoal)}
           </p>
         </div>
-        <div className="bg-white rounded-lg border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide">Gastou</p>
-          <p className="text-2xl font-bold text-amber-600 mt-1">
+
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-3">
+            Gastou
+          </p>
+          <p className="text-2xl font-bold text-amber-600 tracking-tight">
             {formatarMoeda(resumoDia.saiuPessoal)}
           </p>
         </div>
-        <div className="bg-white rounded-lg border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500 uppercase tracking-wide">Saldo pessoal</p>
+
+        <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-5 hover:shadow-md transition-shadow">
+          <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-3">
+            Saldo pessoal
+          </p>
           <p
-            className={`text-2xl font-bold mt-1 ${
-              resumoDia.pessoalLiquido >= 0 ? 'text-green-600' : 'text-red-600'
+            className={`text-2xl font-bold tracking-tight ${
+              resumoDia.pessoalLiquido >= 0 ? 'text-emerald-600' : 'text-red-600'
             }`}
           >
             {formatarMoeda(resumoDia.pessoalLiquido)}
@@ -225,41 +242,41 @@ async function DashboardContent({
         </div>
       </div>
 
-      <p className="text-xs text-zinc-500 mb-6">
-        O que é marcado como &quot;pessoal&quot; não entra no lucro do negócio. É o
-        seu dinheiro de fora do trabalho.
+      <p className="text-xs text-zinc-500 mb-8">
+        O que é marcado como <strong>pessoal</strong> não entra no lucro do negócio.
       </p>
 
-      <div className="bg-white rounded-lg border border-zinc-200 p-6 mb-8">
-        <p className="text-xs text-zinc-500 uppercase tracking-wide mb-3">
-          Resumo do mês até agora
+      {/* RESUMO DO MÊS */}
+      <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-xl shadow-sm p-6 mb-8 text-white">
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4">
+          📅 Resumo do mês até agora
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div>
-            <p className="text-xs text-zinc-500">Lucro do negócio</p>
+            <p className="text-xs text-zinc-400 mb-1">Lucro do negócio</p>
             <p
-              className={`text-2xl font-bold mt-1 ${
-                resumoMes.lucro >= 0 ? 'text-green-600' : 'text-red-600'
+              className={`text-2xl font-bold tracking-tight ${
+                resumoMes.lucro >= 0 ? 'text-emerald-400' : 'text-red-400'
               }`}
             >
               {formatarMoeda(resumoMes.lucro)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-zinc-500">Pessoal líquido</p>
+            <p className="text-xs text-zinc-400 mb-1">Pessoal líquido</p>
             <p
-              className={`text-2xl font-bold mt-1 ${
-                resumoMes.pessoalLiquido >= 0 ? 'text-green-600' : 'text-red-600'
+              className={`text-2xl font-bold tracking-tight ${
+                resumoMes.pessoalLiquido >= 0 ? 'text-emerald-400' : 'text-red-400'
               }`}
             >
               {formatarMoeda(resumoMes.pessoalLiquido)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-zinc-500">Sobrou de verdade</p>
+            <p className="text-xs text-zinc-400 mb-1">Sobrou de verdade</p>
             <p
-              className={`text-2xl font-bold mt-1 ${
-                resumoMes.sobrouDeVerdade >= 0 ? 'text-green-600' : 'text-red-600'
+              className={`text-3xl font-bold tracking-tight ${
+                resumoMes.sobrouDeVerdade >= 0 ? 'text-white' : 'text-red-400'
               }`}
             >
               {formatarMoeda(resumoMes.sobrouDeVerdade)}
@@ -268,8 +285,14 @@ async function DashboardContent({
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-zinc-200 p-6">
-        <h2 className="text-lg font-semibold text-zinc-900 mb-4">Histórico do dia</h2>
+      {/* HISTÓRICO */}
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <span className="text-lg">📋</span>
+          <h2 className="text-base font-semibold text-zinc-900">
+            Histórico do dia
+          </h2>
+        </div>
         <TransacaoList data={dataSelecionada} tenantId={profile.tenant_id} />
       </div>
 
@@ -280,7 +303,7 @@ async function DashboardContent({
 
       <AppFooter />
 
-      <WhatsAppButton posicao="esquerda" tamanho="pequeno" />
+      <WhatsAppButton posicao="direita" tamanho="pequeno" />
     </div>
   )
 }
@@ -291,31 +314,24 @@ export default function DashboardPage({
   searchParams: Promise<{ data?: string }>
 }) {
   return (
-    <div className="min-h-screen bg-zinc-50 p-4 md:p-8">
-      <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardContent searchParams={searchParams} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent searchParams={searchParams} />
+    </Suspense>
   )
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="max-w-4xl mx-auto animate-pulse">
-      <div className="h-8 bg-zinc-200 rounded w-64 mb-2" />
-      <div className="h-4 bg-zinc-200 rounded w-48 mb-8" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div className="h-24 bg-zinc-200 rounded" />
-        <div className="h-24 bg-zinc-200 rounded" />
-        <div className="h-24 bg-zinc-200 rounded" />
+    <div className="max-w-5xl mx-auto p-4 md:p-8 animate-pulse">
+      <div className="h-8 bg-zinc-200 rounded-lg w-64 mb-2" />
+      <div className="h-6 bg-zinc-200 rounded-lg w-24 mb-8" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="h-32 bg-zinc-200 rounded-xl" />
+        <div className="h-32 bg-zinc-200 rounded-xl" />
+        <div className="h-32 bg-zinc-200 rounded-xl" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="h-24 bg-zinc-200 rounded" />
-        <div className="h-24 bg-zinc-200 rounded" />
-        <div className="h-24 bg-zinc-200 rounded" />
-      </div>
-      <div className="h-40 bg-zinc-200 rounded mb-8" />
-      <div className="h-96 bg-zinc-200 rounded" />
+      <div className="h-40 bg-zinc-200 rounded-xl mb-8" />
+      <div className="h-96 bg-zinc-200 rounded-xl" />
     </div>
   )
 }

@@ -40,18 +40,18 @@ export function DateNavigator() {
       <button
         type="button"
         onClick={() => navegar(adicionarDias(dataAtual, -1))}
-        className="w-9 h-9 flex items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
+        className="w-10 h-10 flex items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition"
         title="Dia anterior"
       >
-        ◀
+        ←
       </button>
 
-      <div className="flex items-center gap-2 bg-white border border-zinc-300 rounded-md px-3 py-2">
-        <span className="text-sm font-medium text-zinc-900">
+      <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-4 py-2.5 shadow-sm">
+        <span className="text-sm font-semibold text-zinc-900">
           {formatarDataBR(dataAtual)}
         </span>
         {ehHoje(dataAtual) && (
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+          <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
             Hoje
           </span>
         )}
@@ -62,7 +62,7 @@ export function DateNavigator() {
         value={dataAtual}
         max={hoje}
         onChange={(e) => navegar(e.target.value)}
-        className="text-sm px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 cursor-pointer"
+        className="text-sm px-3 py-2.5 rounded-lg border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 cursor-pointer transition"
         title="Escolher data"
       />
 
@@ -70,17 +70,17 @@ export function DateNavigator() {
         type="button"
         onClick={() => navegar(adicionarDias(dataAtual, 1))}
         disabled={ehHoje(dataAtual)}
-        className="w-9 h-9 flex items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-10 h-10 flex items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition disabled:opacity-40 disabled:cursor-not-allowed"
         title="Próximo dia"
       >
-        ▶
+        →
       </button>
 
       {!ehHoje(dataAtual) && (
         <button
           type="button"
           onClick={() => navegar(hoje)}
-          className="text-xs px-3 py-2 rounded-md border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 transition"
+          className="text-xs font-medium px-3 py-2.5 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition"
         >
           Voltar para hoje
         </button>

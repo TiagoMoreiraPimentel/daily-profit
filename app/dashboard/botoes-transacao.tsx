@@ -18,7 +18,7 @@ export function BotoesTransacao({
         <button
           type="button"
           onClick={() => setModal('entrada')}
-          className="w-14 h-14 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 hover:shadow-xl transition-all flex items-center justify-center text-2xl font-bold"
+          className="w-14 h-14 rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-600/40 transition-all flex items-center justify-center text-2xl font-bold active:scale-95"
           title="Nova entrada"
           aria-label="Nova entrada"
         >
@@ -27,7 +27,7 @@ export function BotoesTransacao({
         <button
           type="button"
           onClick={() => setModal('saida')}
-          className="w-14 h-14 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 hover:shadow-xl transition-all flex items-center justify-center text-2xl font-bold"
+          className="w-14 h-14 rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-xl hover:shadow-red-600/40 transition-all flex items-center justify-center text-2xl font-bold active:scale-95"
           title="Nova saída"
           aria-label="Nova saída"
         >
