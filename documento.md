@@ -42,16 +42,12 @@ DECISÕES TRAVADAS:
 - Import alias: @/* (padrão do Next.js 16)
 - Middleware: renomeado para proxy.ts (Next.js 16)
 - Proxy: rotas /api/* excluídas do matcher + páginas públicas
-  (/, /login, /cadastro, /esqueci-senha, /atualizar-senha, /termos, /privacidade)
 - Suspense obrigatório em páginas dinâmicas (Cache Components do Next.js 16)
 - Mercado Pago: Checkout Bricks (Payment Brick) no frontend
-  gera card_token_id → backend cria /preapproval com status authorized
 - Mercado Pago: produção (não mais sandbox)
 - Webhook: aponta para https://dailyprofit.com.br/api/webhooks/mercadopago
-  Eventos: "Planos e assinaturas" + "Pagamentos (legacy)"
-- Resend: domínio dailyprofit.com.br verificado (São Paulo - sa-east-1)
-- SMTP do Supabase: configurado (smtp.resend.com) → limite de e-mails aumentado
-- Rate limit de e-mails: RESOLVIDO
+- Resend: domínio dailyprofit.com.br verificado + SMTP configurado
+- Rate limit de e-mails do Supabase: RESOLVIDO com SMTP próprio
 - FABs (Floating Action Buttons) para entrada/saída no dashboard
 - Navegação por data no dashboard (setas + calendário nativo)
 - Modal de nova transação (substituiu formulário fixo)
@@ -62,30 +58,46 @@ DECISÕES TRAVADAS:
 - Contagem de transações: live (apagadas não são contabilizadas)
 - Landing page na raiz do domínio (/)
 - WhatsApp flutuante: 11 99223-3306 (suporte)
-  Posição: direita na landing, esquerda nas telas internas
+  → Posição: CANTO SUPERIOR DIREITO em todas as telas [ATUALIZADO]
+  → Tamanho: w-10 h-10 mobile, w-11 h-11 desktop
 - Termos e Privacidade: páginas públicas (não exigem login)
 - Footer com links (Termos, Privacidade, Suporte) no dashboard e telas Pro
 - Categorias por tenant (cada usuário tem as próprias)
-- Tela /configuracoes: gerenciamento de categorias + carteiras [ATUALIZADO]
+- Tela /configuracoes: gerenciamento de categorias + carteiras
 - CSV exportado com BOM UTF-8 + separador `;` (padrão BR)
 - Gráfico de entradas/saídas (donut) no relatório
 - Gráfico unificado por categoria (lista + barras)
 - Saudação no dashboard usa nome do negócio (não o e-mail)
-- Sistema de carteiras por tenant [NOVO]
+- Sistema de carteiras por tenant
   → Tabela carteiras (nome, tipo, saldo_inicial, cor)
   → Tipos: banco, digital, dinheiro, outro
   → Saldo calculado dinamicamente (saldo_inicial + entradas − saídas)
   → Select de carteira no modal de transação (opcional)
   → Nome da carteira visível na lista de transações
   → KPIs de saldo por carteira no relatório
-- Sistema de vencimento do plano Pro [NOVO]
+- Sistema de vencimento do plano Pro
   → Coluna plano_vencimento em tenants
   → Painel admin define data de início; vencimento = +1 mês
   → Alertas visuais: amarelo (≤3 dias), vermelho (vencido)
   → Expiração automática: verificada quando o usuário abre o dashboard
-  → Função SQL expirar_planos_vencidos() (mantida, cron REMOVIDO) [ATUALIZADO]
-  → Sem cron: expiração só roda quando o usuário acessa (decisão atual)
-- Nome da carteira aparece na linha de detalhe da transação [NOVO]
+  → Cron REMOVIDO (decisão: sem cron por enquanto)
+- Nome da carteira aparece na linha de detalhe da transação
+- DESIGN SYSTEM (novo) [ATUALIZADO]
+  → Paleta: emerald (marca) + zinc (neutros)
+  → Fonte: Inter (substituiu Geist)
+  → Cards: rounded-xl, shadow-sm, border-zinc-200/80
+  → Botões: variant 'brand' (emerald) + 'danger' (red)
+  → Segmented controls (tipo iOS) para tipo/natureza
+  → CSS vars em globals.css
+- NAVEGAÇÃO (novo) [ATUALIZADO]
+  → Desktop: sidebar fixa à esquerda (w-56)
+    - Logo, navegação, botão Sair
+    - Item ativo destacado em emerald
+  → Mobile: bottom nav fixa embaixo
+    - 4 primeiros itens + botão "Mais" (abre sheet)
+    - Sheet sobe com os itens restantes + Sair
+  → Layouts dedicados: app/dashboard/layout.tsx, app/pro/layout.tsx,
+    app/configuracoes/layout.tsx
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
@@ -101,6 +113,7 @@ FUNCIONALIDADES CORE:
 - F11: Assinatura via WhatsApp (fluxo temporário)                [x] FEITO
 - F12: Sistema de carteiras (bancos/contas/dinheiro)             [x] FEITO
 - F13: Vencimento e expiração automática do Pro                  [x] FEITO
+- F14: Redesign com sidebar + bottom nav                         [x] FEITO
 
 REGRAS DE NEGÓCIO:
 - Limite do Free aplicado no BACKEND, não no frontend
@@ -132,23 +145,21 @@ FASE 0 — Fundação (antes de codar)
 
 FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar projeto no Supabase — região South America (São Paulo)
-[x] Rodar SQL das tabelas: tenants, users, transactions, recurring,
-    payment_links, subscriptions, categorias_padrao
+[x] Rodar SQL das tabelas principais
 [x] Criar tabela categorias (por tenant) + RLS
-[x] Criar tabela carteiras (por tenant) + RLS  [NOVO]
-[x] Adicionar coluna carteira_id em transactions  [NOVO]
-[x] Adicionar coluna plano_vencimento em tenants  [NOVO]
+[x] Criar tabela carteiras (por tenant) + RLS
+[x] Adicionar coluna carteira_id em transactions
+[x] Adicionar coluna plano_vencimento em tenants
 [x] Habilitar RLS em todas as tabelas com tenant_id
 [x] Criar políticas RLS (usando get_user_tenant())
 [x] Criar função count_monthly_transactions()
 [x] Criar função get_user_tenant()
-[x] Criar função pode_inserir_transacao() (inclui super)  [CORRIGIDO]
+[x] Criar função pode_inserir_transacao() (inclui super)
 [x] Criar função is_super()
-[x] Criar função expirar_planos_vencidos()  [NOVO]
+[x] Criar função expirar_planos_vencidos()
 [x] Criar view vw_lucro_diario
 [x] Criar trigger updated_at
 [x] Seed de categorias padrão (15 categorias)
-[x] Criar função custom_access_token_hook (criada, NÃO ativada)
 [x] Criar trigger handle_new_user (cria tenant + user + categorias)
 [x] Criar política auth_admin_read_users
 [x] Política de leitura pública para categorias_padrao
@@ -156,7 +167,6 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Constraint plano aceita 'super' em tenants e subscriptions
 [x] RLS de super REMOVIDA (causava mistura no dashboard)
 [PULADO] Configurar custom claim tenant_id no JWT
-         → bloqueado no plano Free. Usamos get_user_tenant() no RLS.
 [ ] Testar isolamento entre 2 tenants diferentes
 
 FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
@@ -164,170 +174,183 @@ FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
 [x] Tela de cadastro (/cadastro)
 [x] Tela de login (/login)
 [x] Recuperação de senha (/esqueci-senha + /atualizar-senha)
-[x] Verificação de email (DESATIVADA — sem fricção para testes)
+[x] Verificação de email (DESATIVADA)
 [x] Middleware de proteção de rotas (proxy.ts)
-[x] Páginas públicas liberadas no proxy (termos, privacidade)
+[x] Páginas públicas liberadas no proxy
 [x] Onboarding: criação do tenant + categorias via trigger
 [x] Redirecionar para dashboard (/dashboard)
 [x] Botão de logout no dashboard
 [x] Mensagens de erro/sucesso em português
 [x] Tratamento de "Email not confirmed" no login
 [x] Campos do formulário limpos após cadastro
-[x] Trigger handle_new_user recriado (não existia)
+[x] Trigger handle_new_user recriado
 [x] Usuários órfãos corrigidos via SQL
 [x] SMTP próprio configurado (Resend) → rate limit resolvido
 
 FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F1: Tela de registrar transação (entrada/saída, valor, descrição)
-[x] F2: Campo natureza (negocio/pessoal) com separação visual
+[x] F2: Campo natureza com separação visual
 [x] F3: Tela com cards de resumo (negócio + pessoal)
-[x] Listagem de transações do dia (separada por natureza + hora)
-[x] Supabase Realtime na tela de lucro (atualização automática)
+[x] Listagem de transações do dia
+[x] Supabase Realtime na tela de lucro
 [x] Badge de plano (Free/Pro/Super) ao lado do nome
 [x] Hora nas transações (fuso America/Sao_Paulo)
 [x] Excluir transações do dashboard
-[x] Editar transações (via API route para evitar CORS)
-[x] Modal de nova transação (substituiu formulário fixo)
+[x] Editar transações (via API route)
+[x] Modal de nova transação
 [x] Botões FAB flutuantes (+ entrada / − saída)
-[x] Navegação por data no dashboard (setas + calendário)
+[x] Navegação por data no dashboard
 [x] Cards sincronizados com a data selecionada
-[x] Registrar transação na data selecionada (não só hoje)
+[x] Registrar transação na data selecionada
 [x] Select de categoria no modal (opcional)
-[x] Select de carteira no modal (opcional)  [NOVO]
-[x] Categoria e carteira aparecem na lista  [ATUALIZADO]
-[x] Saudação usa o nome do negócio (não o e-mail)
+[x] Select de carteira no modal (opcional)
+[x] Categoria e carteira aparecem na lista
+[x] Saudação usa o nome do negócio
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
-[x] Aplicar limite de 30 transações/mês no backend (RLS + função)
+[x] Aplicar limite de 30 transações/mês no backend
 [x] Banner suave ao atingir 80% do limite
 [x] Modal de bloqueio ao atingir 100%
-[x] Botão "Assinar Pro" sempre visível no dashboard (free only)
-[x] Bloco AssinaturaInfo no dashboard (status da assinatura)
-[ ] Email pós-valor (7 dias de uso)  [ADIADO — sem domínio/email]
+[x] Botão "Assinar Pro" sempre visível no dashboard
+[x] Bloco AssinaturaInfo no dashboard
+[ ] Email pós-valor (7 dias de uso)  [ADIADO]
 
 FASE 5 — Mercado Pago  [PAUSADA — usando WhatsApp temporariamente]
 [x] Criar conta Mercado Pago Developers
 [x] Criar aplicação no painel
-[x] Configurar variáveis de ambiente (.env + Vercel)
-[x] Implementar /preapproval_plan (criar plano Pro)
-[x] Implementar /preapproval (assinar plano com card_token_id)
-[x] Payment Brick (Checkout Bricks) no frontend para tokenizar cartão
+[x] Configurar variáveis de ambiente
+[x] Implementar /preapproval_plan
+[x] Implementar /preapproval
+[x] Payment Brick (Checkout Bricks) no frontend
 [x] Webhook /api/webhooks/mercadopago configurado (200 OK)
 [x] Tratar status: authorized, paused, cancelled, pending
-[x] Proxy exclui /api/* do matcher (webhook não passa por auth)
+[x] Proxy exclui /api/* do matcher
 [x] Migrar para credenciais de PRODUÇÃO
 [x] Webhook salva ultimo_pagamento e proxima_cobranca
-[!] ERRO CC_VAL_433: motor antifraude do Mercado Pago bloqueando
-    todas as tentativas de assinatura (com cartões diferentes,
-    após ativar produção, após 72h de espera)
-    → Confirmado como comportamento do antifraude (não é bug de código)
+[!] ERRO CC_VAL_433: antifraude do Mercado Pago bloqueando
+    todas as tentativas de assinatura
+    → Confirmado como comportamento do antifraude
     → Caso idêntico documentado no Reclame Aqui
-[PAUSADO] Payment Brick comentado no /paywall.tsx (guardado para futuro)
+[PAUSADO] Payment Brick comentado no /paywall.tsx
 [PAUSADO] Fluxo de assinatura recorrente via Mercado Pago
 [ATIVO] Fluxo de assinatura via WhatsApp + liberação manual
 [ ] Reativar Mercado Pago quando o antifraude liberar
 
 FASE 6 — Link de Cobrança (F4)  [REMOVIDA]
-[REMOVIDO] Motivo: exige OAuth + Split de Pagamentos (inviável para MVP).
+[REMOVIDO] Motivo: exige OAuth + Split de Pagamentos
 
 FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
-[x] F5: Previsão de caixa (média + tendência + recorrentes)
-[x] Tela de cadastro de contas recorrentes (/pro/recorrentes)
+[x] F5: Previsão de caixa
+[x] Tela de cadastro de contas recorrentes
 [x] Refresh automático da lista de recorrentes
-[x] F6: Relatório mensal de lucro (com exportação CSV)
-[x] CSV com BOM UTF-8 + separador `;` + formatação BR
-[x] CSV agrupado em: Resumo, Movimentações, Por Categoria
-[x] F7: Gráfico de evolução dos últimos 6 meses
+[x] F6: Relatório mensal (com exportação CSV)
+[x] CSV com BOM UTF-8 + separador `;`
+[x] CSV agrupado: Resumo, Movimentações, Por Categoria
+[x] F7: Gráfico de evolução
 [x] Gráfico de entradas/saídas (donut)
-[x] Gráfico unificado por categoria (lista + barras)
-[x] KPIs de saldo por carteira  [NOVO]
+[x] Gráfico unificado por categoria
+[x] KPIs de saldo por carteira
 [x] Telas Pro acessíveis para super também
-[ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
+[ ] Envio de relatório por e-mail  [ADIADO]
 
 FASE 8 — Landing Page + SEO  [CONCLUÍDA — parcial]
-[x] Landing page na raiz do site (/)
-[x] Página de preços (dentro da landing)
+[x] Landing page na raiz do site
+[x] Página de preços
 [x] WhatsApp flutuante na landing
-[ ] Páginas SEO: "controle financeiro para MEI", "app de lucro para autônomo"
+[ ] Páginas SEO: "controle financeiro para MEI"
 [ ] Google Search Console
 [ ] Analytics (Plausible ou GA4)
 
 FASE 9 — Lançamento  [EM ANDAMENTO]
-[x] Domínio customizado na Vercel (dailyprofit.com.br)
+[x] Domínio customizado na Vercel
 [x] SSL (automático)
 [x] Termos de uso (placeholder, público)
 [x] Política de privacidade (placeholder, público)
-[x] Footer com links no dashboard e telas Pro
+[x] Footer com links
 [x] Canal de suporte (WhatsApp configurado)
 [ ] Backup automático do Supabase
 [ ] Monitoramento de erros (Sentry free)
 [ ] Testes com 5-10 autônomos reais
 
 FASE 10 — Ajustes de UX Mobile  [CONCLUÍDA]
-[x] Contraste dos botões (entrar, previsão, relatório, sair)
-[x] Contraste dos FABs e links como botão
-[x] Contraste dos inputs (texto digitado legível)
+[x] Contraste dos botões
+[x] Contraste dos FABs
+[x] Contraste dos inputs
 [x] color-scheme: light no globals.css
-[x] WhatsApp flutuante em todas as telas
-[x] Remover new Date() de páginas estáticas (termos/privacidade)
+[x] WhatsApp flutuante no canto superior direito
 
 FASE 11 — Painel Admin  [CONCLUÍDA]
-[x] Adicionar plano 'super' na constraint de tenants e subscriptions
-[x] Criar função is_super() no banco
-[x] RLS de super REMOVIDA (causava mistura de dados)
-[x] Painel admin usa service_role (ignora RLS)
-[x] Criar lib/admin.ts (getAdminInfo + isSuper)
-[x] Criar app/api/admin/mudar-plano/route.ts (com service_role)
+[x] Adicionar plano 'super'
+[x] Criar função is_super()
+[x] RLS de super REMOVIDA
+[x] Painel admin usa service_role
+[x] Criar lib/admin.ts
+[x] Criar app/api/admin/mudar-plano/route.ts
 [x] Criar app/api/admin/excluir-tenant/route.ts
-[x] Excluir tenant apaga também auth.users (exclusão completa)
-[x] Criar app/admin/page.tsx (usa service_role)
-[x] Criar app/admin/content.tsx (tabela + busca + ações)
-[x] Link "🔧 Admin" no dashboard (só para super)
+[x] Excluir tenant apaga auth.users
+[x] Criar app/admin/page.tsx
+[x] Criar app/admin/content.tsx
+[x] Link "🔧 Admin" no dashboard
 [x] Coluna ultimo_pagamento em subscriptions
 [x] Colunas Status/Últ.pgto/Próx.venc. no painel admin
-[x] Bloco AssinaturaInfo no dashboard do usuário
-[x] Coluna plano_vencimento em tenants  [NOVO]
-[x] Input de data para definir vencimento  [NOVO]
-[x] Cálculo automático do vencimento (+1 mês)  [NOVO]
-[x] Alertas visuais: amarelo (≤3d), vermelho (vencido)  [NOVO]
-[x] Expiração automática (verificação no dashboard)  [NOVO]
-[x] Função SQL expirar_planos_vencidos()  [NOVO]
-[REMOVIDO] Cron job diário (decisão: sem cron por enquanto)
-[ ] Badge "Concedido" para Pro sem assinatura  [MELHORIA FUTURA]
-[ ] Coluna "Última atividade" no painel admin  [MELHORIA FUTURA]
+[x] Bloco AssinaturaInfo no dashboard
+[x] Coluna plano_vencimento em tenants
+[x] Input de data para definir vencimento
+[x] Cálculo automático do vencimento (+1 mês)
+[x] Alertas visuais: amarelo (≤3d), vermelho (vencido)
+[x] Expiração automática (verificação no dashboard)
+[x] Função SQL expirar_planos_vencidos()
+[REMOVIDO] Cron job diário (decisão: sem cron)
+[ ] Badge "Concedido" para Pro sem assinatura
+[ ] Coluna "Última atividade" no painel admin
 
 FASE 12 — Categorias Personalizáveis  [CONCLUÍDA]
-[x] Criar tabela categorias (por tenant) + RLS
-[x] Atualizar trigger handle_new_user (seeda 15 categorias)
-[x] Popular tenants existentes com as 15 categorias
-[x] Criar app/api/categorias/route.ts (GET + POST)
-[x] Criar app/api/categorias/[id]/route.ts (PATCH + DELETE)
-[x] Criar app/configuracoes/page.tsx
-[x] Criar app/configuracoes/content.tsx (CRUD + busca + agrupamento)
-[x] Link "⚙️ Configurações" no dashboard
-[x] Select de categoria no modal de nova transação
-[x] Categoria aparece na lista de transações
+[x] Criar tabela categorias + RLS
+[x] Atualizar trigger handle_new_user
+[x] Popular tenants existentes
+[x] Criar endpoints /api/categorias
+[x] Criar /configuracoes (aba Categorias)
+[x] Select de categoria no modal
 
 FASE 13 — Assinatura via WhatsApp  [CONCLUÍDA]
 [x] Substituir botão "Assinar Pro" por link do WhatsApp
-[x] Mensagem pré-preenchida no WhatsApp
+[x] Mensagem pré-preenchida
 [x] Código do Payment Brick comentado no /paywall.tsx
 [x] BannerLimite com botão de WhatsApp
 [x] ModalLimiteAtingido com botão de WhatsApp
-[x] AssinaturaInfo mostrando "Plano Pro ativo" mesmo sem assinatura MP
+[x] AssinaturaInfo mostrando "Plano Pro ativo" mesmo sem MP
 [x] Preço voltou para R$ 19,90 nos textos
 
-FASE 14 — Sistema de Carteiras  [CONCLUÍDA]  [NOVA]
-[x] Criar tabela carteiras (por tenant) + RLS
+FASE 14 — Sistema de Carteiras  [CONCLUÍDA]
+[x] Criar tabela carteiras + RLS
 [x] Adicionar coluna carteira_id em transactions
-[x] Criar app/api/carteiras/route.ts (GET + POST)
-[x] Criar app/api/carteiras/[id]/route.ts (PATCH + DELETE)
-[x] Criar app/api/carteiras/saldos/route.ts
-[x] Criar aba "Carteiras" em /configuracoes (CRUD + busca + cor)
-[x] Select de carteira no modal de nova transação (opcional)
-[x] Nome da carteira na lista de transações
+[x] Criar endpoints /api/carteiras
+[x] Criar aba "Carteiras" em /configuracoes
+[x] Select de carteira no modal
+[x] Nome da carteira na lista
 [x] KPIs de saldo por carteira em /pro/relatorio
-[x] Saldo calculado dinamicamente (saldo_inicial + entradas − saídas)
+[x] Saldo calculado dinamicamente
+
+FASE 15 — Redesign Visual  [CONCLUÍDA]  [NOVA]
+[x] Paleta emerald + zinc em globals.css
+[x] Fonte Inter (substituiu Geist) em layout.tsx
+[x] Atualizar Button (variants brand + danger)
+[x] Atualizar Card (rounded-xl + shadow-sm)
+[x] Atualizar Input (h-11 + focus emerald)
+[x] Atualizar Label
+[x] Sidebar desktop (components/sidebar-nav.tsx)
+[x] Bottom nav mobile (no sidebar-nav.tsx)
+[x] Layouts: dashboard, pro, configuracoes
+[x] Redesenhar app/dashboard/page.tsx
+[x] Redesenhar botoes-transacao.tsx (FABs com sombra colorida)
+[x] Redesenhar date-navigator.tsx
+[x] Redesenhar transacao-list.tsx
+[x] Redesenhar nova-transacao-modal.tsx (segmented controls)
+[x] Redesenhar app/pro/previsao/content.tsx
+[x] Redesenhar app/pro/relatorio/content.tsx
+[x] Redesenhar app/pro/recorrentes/content.tsx
+[x] Redesenhar app/configuracoes/content.tsx
+[x] WhatsApp no canto superior direito
 
 🔹 PARTE 3 — REGRAS DE CONTINUIDADE
 
@@ -352,33 +375,21 @@ FORMATO DE RESPOSTA PADRÃO:
 
 ESTADO ATUAL:
 - Fase: 5 (Mercado Pago) — PAUSADA (antifraude bloqueando)
-- Fase ativa: 14 (Sistema de Carteiras) — CONCLUÍDA
+- Fase ativa: 15 (Redesign Visual) — CONCLUÍDA
 - Concluído até agora:
-  * FASE 0: Supabase + Mercado Pago + Vercel + GitHub + domínio funcionando
-  * FASE 1: banco completo (tabelas categorias e carteiras, plano_vencimento)
-  * FASE 2: auth completo (SMTP configurado, rate limit resolvido)
-  * FASE 3: dashboard completo (categoria + carteira no modal,
-    nome da carteira na lista, saudação com nome do negócio)
-  * FASE 4: limite Free + botão Assinar + bloco AssinaturaInfo
-  * FASE 5: Mercado Pago PAUSADO (CC_VAL_433 do antifraude)
-  * FASE 7: previsão, recorrentes, relatório, CSV melhorado, gráficos,
-    saldos por carteira
-  * FASE 8: landing page
-  * FASE 9: termos e privacidade, SSL, WhatsApp
-  * FASE 10: UX mobile
-  * FASE 11: painel admin completo (vencimento, alertas, expiração)
-  * FASE 12: categorias personalizáveis
-  * FASE 13: assinatura via WhatsApp + liberação manual
-  * FASE 14: sistema de carteiras completo
+  * FASE 0 a 14: banco, auth, dashboard, Pro, admin, categorias,
+    WhatsApp, carteiras, vencimento
+  * FASE 15: redesign completo com sidebar + bottom nav + paleta emerald
   * Domínio dailyprofit.com.br funcionando + SSL
   * Resend verificado + SMTP configurado
   * Deploy ativo
   * Commit + push feitos
-- Última decisão: cron REMOVIDO (expiração roda só no dashboard)
+- Última decisão: WhatsApp no canto superior direito
 - Pendências conhecidas:
   * SEO (páginas, Google Search Console, Analytics)
   * Reativar Mercado Pago quando o antifraude liberar
-- Próximo passo: A DEFINIR com o usuário (SEO, analytics, ou reativar MP)
+  * Aplicar redesign nas telas /admin, /login, /cadastro (ainda antigas)
+- Próximo passo: A DEFINIR com o usuário
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 

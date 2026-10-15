@@ -57,44 +57,52 @@ export async function TransacaoList({
             💼 Negócio ({negocio.length})
           </p>
           <ul className="divide-y divide-zinc-100">
-            {negocio.map((t) => (
-              <li
-                key={t.id}
-                className="py-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50/50 transition-colors -mx-2 px-2 rounded-lg"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-zinc-900 truncate">
-                    {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
-                  </p>
-                  <p className="text-xs text-zinc-400 truncate mt-0.5">
-                    {formatarHora(t.criado_em)}
-                    {t.categoria && ` · ${t.categoria}`}
-                    {t.carteira_id && nomePorCarteira[t.carteira_id] && (
-                      <> · 💳 {nomePorCarteira[t.carteira_id]}</>
-                    )}
-                  </p>
-                </div>
-                <span
-                  className={`text-sm font-semibold whitespace-nowrap ${
-                    t.tipo === 'entrada' ? 'text-emerald-600' : 'text-red-600'
-                  }`}
+            {negocio.map((t) => {
+              const nomeCarteira = t.carteira_id ? nomePorCarteira[t.carteira_id] : null
+
+              return (
+                <li
+                  key={t.id}
+                  className="py-3.5 flex items-start justify-between gap-3 hover:bg-zinc-50/50 transition-colors -mx-2 px-2 rounded-lg"
                 >
-                  {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
-                </span>
-                <AcoesTransacao
-                  tenantId={tenantId}
-                  transacao={{
-                    id: t.id,
-                    tipo: t.tipo,
-                    valor: Number(t.valor),
-                    descricao: t.descricao,
-                    natureza: t.natureza,
-                    categoria: t.categoria,
-                    carteira_id: t.carteira_id,
-                  }}
-                />
-              </li>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-zinc-900 truncate">
+                      {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
+                    </p>
+                    <p className="text-xs text-zinc-400 truncate mt-0.5">
+                      {formatarHora(t.criado_em)}
+                      {t.categoria && ` · ${t.categoria}`}
+                    </p>
+                    {nomeCarteira && (
+                      <p className="text-xs text-zinc-500 truncate mt-0.5">
+                        💳 {nomeCarteira}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span
+                      className={`text-sm font-semibold whitespace-nowrap ${
+                        t.tipo === 'entrada' ? 'text-emerald-600' : 'text-red-600'
+                      }`}
+                    >
+                      {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
+                    </span>
+                  </div>
+                  <AcoesTransacao
+                    tenantId={tenantId}
+                    transacao={{
+                      id: t.id,
+                      tipo: t.tipo,
+                      valor: Number(t.valor),
+                      descricao: t.descricao,
+                      natureza: t.natureza,
+                      categoria: t.categoria,
+                      carteira_id: t.carteira_id,
+                    }}
+                  />
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
@@ -105,40 +113,48 @@ export async function TransacaoList({
             🏠 Pessoal ({pessoal.length})
           </p>
           <ul className="divide-y divide-zinc-100">
-            {pessoal.map((t) => (
-              <li
-                key={t.id}
-                className="py-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50/50 transition-colors -mx-2 px-2 rounded-lg"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-zinc-700 truncate">
-                    {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
-                  </p>
-                  <p className="text-xs text-zinc-400 truncate mt-0.5">
-                    {formatarHora(t.criado_em)}
-                    {t.categoria && ` · ${t.categoria}`}
-                    {t.carteira_id && nomePorCarteira[t.carteira_id] && (
-                      <> · 💳 {nomePorCarteira[t.carteira_id]}</>
+            {pessoal.map((t) => {
+              const nomeCarteira = t.carteira_id ? nomePorCarteira[t.carteira_id] : null
+
+              return (
+                <li
+                  key={t.id}
+                  className="py-3.5 flex items-start justify-between gap-3 hover:bg-zinc-50/50 transition-colors -mx-2 px-2 rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-zinc-700 truncate">
+                      {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
+                    </p>
+                    <p className="text-xs text-zinc-400 truncate mt-0.5">
+                      {formatarHora(t.criado_em)}
+                      {t.categoria && ` · ${t.categoria}`}
+                    </p>
+                    {nomeCarteira && (
+                      <p className="text-xs text-zinc-500 truncate mt-0.5">
+                        💳 {nomeCarteira}
+                      </p>
                     )}
-                  </p>
-                </div>
-                <span className="text-sm text-zinc-500 whitespace-nowrap">
-                  {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
-                </span>
-                <AcoesTransacao
-                  tenantId={tenantId}
-                  transacao={{
-                    id: t.id,
-                    tipo: t.tipo,
-                    valor: Number(t.valor),
-                    descricao: t.descricao,
-                    natureza: t.natureza,
-                    categoria: t.categoria,
-                    carteira_id: t.carteira_id,
-                  }}
-                />
-              </li>
-            ))}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-sm text-zinc-500 whitespace-nowrap">
+                      {t.tipo === 'entrada' ? '+' : '−'} {formatarMoeda(Number(t.valor))}
+                    </span>
+                  </div>
+                  <AcoesTransacao
+                    tenantId={tenantId}
+                    transacao={{
+                      id: t.id,
+                      tipo: t.tipo,
+                      valor: Number(t.valor),
+                      descricao: t.descricao,
+                      natureza: t.natureza,
+                      categoria: t.categoria,
+                      carteira_id: t.carteira_id,
+                    }}
+                  />
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
