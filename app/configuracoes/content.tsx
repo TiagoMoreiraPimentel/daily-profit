@@ -34,21 +34,40 @@ const TIPOS_CARTEIRA = [
   { value: 'outro', label: '📦 Outro' },
 ]
 
+const TIPOS_NEGOCIO = [
+  { value: 'autonomo', label: 'Autônomo' },
+  { value: 'mei', label: 'MEI' },
+  { value: 'informal', label: 'Informal' },
+  { value: 'outro', label: 'Outro' },
+]
+
 export function ConfiguracoesContent() {
-  const [aba, setAba] = useState<'categorias' | 'carteiras'>('categorias')
+  const [aba, setAba] = useState<'perfil' | 'categorias' | 'carteiras'>('perfil')
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 pb-24 md:pb-8">
-      <h1 className="text-2xl font-bold text-zinc-900 mb-2">⚙️ Configurações</h1>
+      <h1 className="text-2xl font-bold text-zinc-900 mb-2 tracking-tight">
+        ⚙️ Configurações
+      </h1>
       <p className="text-zinc-500 text-sm mb-6">
-        Personalize categorias e carteiras (bancos, contas digitais, dinheiro).
+        Personalize seu perfil, categorias e carteiras.
       </p>
 
       {/* Abas */}
-      <div className="border-b border-zinc-200 mb-6 flex gap-1">
+      <div className="border-b border-zinc-200 mb-6 flex gap-1 overflow-x-auto">
+        <button
+          onClick={() => setAba('perfil')}
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+            aba === 'perfil'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-zinc-500 hover:text-zinc-900'
+          }`}
+        >
+          👤 Perfil
+        </button>
         <button
           onClick={() => setAba('categorias')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
             aba === 'categorias'
               ? 'border-emerald-600 text-emerald-700'
               : 'border-transparent text-zinc-500 hover:text-zinc-900'
@@ -58,7 +77,7 @@ export function ConfiguracoesContent() {
         </button>
         <button
           onClick={() => setAba('carteiras')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
             aba === 'carteiras'
               ? 'border-emerald-600 text-emerald-700'
               : 'border-transparent text-zinc-500 hover:text-zinc-900'
@@ -68,13 +87,163 @@ export function ConfiguracoesContent() {
         </button>
       </div>
 
-      {aba === 'categorias' ? <CategoriasPanel /> : <CarteirasPanel />}
+      {aba === 'perfil' && <PerfilPanel />}
+      {aba === 'categorias' && <CategoriasPanel />}
+      {aba === 'carteiras' && <CarteirasPanel />}
     </div>
   )
 }
 
 // =====================================================
-// PAINEL DE CATEGORIAS
+// PERFIL
+// =====================================================
+function PerfilPanel() {
+  const [nomeNegocio, setNomeNegocio] = useState('')
+  const [tipo, setTipo] = useState('autonomo')
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+  const [sucesso, setSucesso] = useState<string | null>(null)
+
+  const carregar = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/perfil')
+      const data = await res.json()
+      if (res.ok) {
+        setNomeNegocio(data.nome_negocio ?? '')
+        setTipo(data.tipo ?? 'autonomo')
+        setEmail(data.email ?? '')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    carregar()
+  }, [carregar])
+
+  async function salvar(e: React.FormEvent) {
+    e.preventDefault()
+    setErro(null)
+    setSucesso(null)
+
+    if (!nomeNegocio.trim()) {
+      setErro('Digite o nome do negócio.')
+      return
+    }
+
+    setSalvando(true)
+    try {
+      const res = await fetch('/api/perfil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome_negocio: nomeNegocio.trim(), tipo }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErro(data.error || 'Erro ao salvar')
+        return
+      }
+      setSucesso('Perfil atualizado!')
+      setTimeout(() => setSucesso(null), 2000)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6">
+        <p className="text-sm text-zinc-500 text-center py-4">Carregando...</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-zinc-200/80 shadow-sm p-6 max-w-2xl">
+      <h2 className="text-lg font-semibold text-zinc-900 mb-1">
+        Perfil do negócio
+      </h2>
+      <p className="text-sm text-zinc-500 mb-6">
+        Essas informações aparecem no seu dashboard.
+      </p>
+
+      {erro && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg mb-4">
+          ❌ {erro}
+        </div>
+      )}
+      {sucesso && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm p-3 rounded-lg mb-4">
+          ✅ {sucesso}
+        </div>
+      )}
+
+      <form onSubmit={salvar} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="nomeNegocio">Nome do negócio</Label>
+          <Input
+            id="nomeNegocio"
+            value={nomeNegocio}
+            onChange={(e) => setNomeNegocio(e.target.value)}
+            placeholder="Ex: Barbearia do João"
+            required
+            disabled={salvando}
+          />
+          <p className="text-xs text-zinc-500">
+            Esse é o nome que aparece no topo do dashboard.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tipo">Tipo de negócio</Label>
+          <select
+            id="tipo"
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            disabled={salvando}
+            className="flex h-11 w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50"
+          >
+            {TIPOS_NEGOCIO.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            disabled
+            className="bg-zinc-50 text-zinc-500 cursor-not-allowed"
+          />
+          <p className="text-xs text-zinc-500">
+            Para alterar o email, entre em contato com o suporte.
+          </p>
+        </div>
+
+        <Button
+          type="submit"
+          variant="brand"
+          className="w-full"
+          disabled={salvando}
+        >
+          {salvando ? 'Salvando...' : 'Salvar alterações'}
+        </Button>
+      </form>
+    </div>
+  )
+}
+
+// =====================================================
+// CATEGORIAS
 // =====================================================
 function CategoriasPanel() {
   const [categorias, setCategorias] = useState<Categoria[]>([])
@@ -287,7 +456,7 @@ function CategoriasPanel() {
 }
 
 // =====================================================
-// PAINEL DE CARTEIRAS
+// CARTEIRAS
 // =====================================================
 function CarteirasPanel() {
   const [carteiras, setCarteiras] = useState<Carteira[]>([])

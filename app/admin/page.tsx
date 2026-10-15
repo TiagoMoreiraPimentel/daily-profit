@@ -7,13 +7,7 @@ import { AdminContent } from './content'
 
 export default function AdminPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-zinc-50 p-8 text-center text-sm text-zinc-500">
-          Carregando...
-        </div>
-      }
-    >
+    <Suspense fallback={<AdminSkeleton />}>
       <AdminWrapper />
     </Suspense>
   )
@@ -31,11 +25,11 @@ async function AdminWrapper() {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  // Expira planos vencidos antes de carregar
+  // Expira planos vencidos
   try {
     await supabaseAdmin.rpc('expirar_planos_vencidos')
   } catch (e) {
-    console.warn('Não foi possível expirar planos (função RPC):', e)
+    console.warn('Não foi possível expirar planos:', e)
   }
 
   const { data: tenants } = await supabaseAdmin
@@ -90,4 +84,13 @@ async function AdminWrapper() {
   }))
 
   return <AdminContent admin={admin} tenants={lista} />
+}
+
+function AdminSkeleton() {
+  return (
+    <div className="p-4 md:p-8 max-w-7xl mx-auto animate-pulse">
+      <div className="h-8 bg-zinc-200 rounded-lg w-64 mb-4" />
+      <div className="h-96 bg-zinc-200 rounded-xl" />
+    </div>
+  )
 }

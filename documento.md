@@ -49,7 +49,7 @@ DECISÕES TRAVADAS:
 - Resend: domínio dailyprofit.com.br verificado + SMTP configurado
 - Rate limit de e-mails do Supabase: RESOLVIDO com SMTP próprio
 - FABs (Floating Action Buttons) para entrada/saída no dashboard
-  → Posição mobile: bottom-24 (acima do bottom nav) [ATUALIZADO]
+  → Posição mobile: bottom-24 (acima do bottom nav)
   → Posição desktop: bottom-6
 - Navegação por data no dashboard (setas + calendário nativo)
 - Modal de nova transação (substituiu formulário fixo)
@@ -60,14 +60,14 @@ DECISÕES TRAVADAS:
 - Contagem de transações: live (apagadas não são contabilizadas)
 - Landing page na raiz do domínio (/)
 - WhatsApp flutuante: 11 99223-3306 (suporte)
-  → Landing: canto inferior ESQUERDO (local="rodape") [ATUALIZADO]
+  → Landing: canto inferior ESQUERDO (local="rodape")
   → App (dashboard, previsão, relatório, configurações):
     canto superior DIREITO (local="topo", padrão)
   → Tamanho: w-10 h-10 mobile, w-11 h-11 desktop
 - Termos e Privacidade: páginas públicas (não exigem login)
 - Footer com links (Termos, Privacidade, Suporte) no dashboard e telas Pro
 - Categorias por tenant (cada usuário tem as próprias)
-- Tela /configuracoes: gerenciamento de categorias + carteiras
+- Tela /configuracoes: 3 abas (Perfil, Categorias, Carteiras) [ATUALIZADO]
 - CSV exportado com BOM UTF-8 + separador `;` (padrão BR)
 - Gráfico de entradas/saídas (donut) no relatório
 - Gráfico unificado por categoria (lista + barras)
@@ -78,7 +78,7 @@ DECISÕES TRAVADAS:
   → Saldo calculado dinamicamente (saldo_inicial + entradas − saídas)
   → Select de carteira no modal de transação (opcional)
   → Nome da carteira visível na lista de transações
-    - Em LINHA SEPARADA no mobile (para não cortar) [ATUALIZADO]
+    - Em LINHA SEPARADA no mobile (para não cortar)
   → KPIs de saldo por carteira no relatório
 - Sistema de vencimento do plano Pro
   → Coluna plano_vencimento em tenants
@@ -86,6 +86,11 @@ DECISÕES TRAVADAS:
   → Alertas visuais: amarelo (≤3 dias), vermelho (vencido)
   → Expiração automática: verificada quando o usuário abre o dashboard
   → Cron REMOVIDO (decisão: sem cron por enquanto)
+- Edição de perfil do negócio [NOVO]
+  → Aba "Perfil" em /configuracoes
+  → Permite alterar nome do negócio + tipo
+  → Email não editável (só via suporte)
+  → Endpoint PATCH /api/perfil
 - DESIGN SYSTEM
   → Paleta: emerald (marca) + zinc (neutros)
   → Fonte: Inter (substituiu Geist)
@@ -101,7 +106,10 @@ DECISÕES TRAVADAS:
     - 4 primeiros itens + botão "Mais" (abre sheet)
     - Sheet sobe com os itens restantes + Sair
   → Layouts dedicados: app/dashboard/layout.tsx, app/pro/layout.tsx,
-    app/configuracoes/layout.tsx
+    app/configuracoes/layout.tsx, app/admin/layout.tsx
+- Landing page: seção de carteiras adicionada
+- Telas /login, /cadastro, /admin: redesign aplicado
+- Página /divulgar: banner para WhatsApp (Status/Stories 9:16)
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
@@ -118,6 +126,8 @@ FUNCIONALIDADES CORE:
 - F12: Sistema de carteiras (bancos/contas/dinheiro)             [x] FEITO
 - F13: Vencimento e expiração automática do Pro                  [x] FEITO
 - F14: Redesign com sidebar + bottom nav                         [x] FEITO
+- F15: Banner para divulgação no WhatsApp (/divulgar)            [x] FEITO
+- F16: Edição do perfil do negócio                               [x] FEITO
 
 REGRAS DE NEGÓCIO:
 - Limite do Free aplicado no BACKEND, não no frontend
@@ -131,6 +141,8 @@ REGRAS DE NEGÓCIO:
 - Carteira é opcional na transação
 - Pro vence e volta para Free quando `plano_vencimento < hoje`
 - Expiração roda no dashboard (não há cron)
+- Nome do negócio é editável em /configuracoes → aba Perfil
+- Email não é editável (apenas via suporte)
 
 🔹 PARTE 2 — CHECKLIST DE IMPLANTAÇÃO
 
@@ -175,15 +187,15 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 
 FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
 [x] Configurar Supabase Auth (email/senha)
-[x] Tela de cadastro (/cadastro)
-[x] Tela de login (/login)
+[x] Tela de cadastro (/cadastro) — redesign aplicado
+[x] Tela de login (/login) — redesign aplicado
 [x] Recuperação de senha (/esqueci-senha + /atualizar-senha)
 [x] Verificação de email (DESATIVADA)
 [x] Middleware de proteção de rotas (proxy.ts)
 [x] Páginas públicas liberadas no proxy
 [x] Onboarding: criação do tenant + categorias via trigger
 [x] Redirecionar para dashboard (/dashboard)
-[x] Botão de logout no dashboard
+[x] Botão de logout (na sidebar)
 [x] Mensagens de erro/sucesso em português
 [x] Tratamento de "Email not confirmed" no login
 [x] Campos do formulário limpos após cadastro
@@ -209,7 +221,7 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] Select de categoria no modal (opcional)
 [x] Select de carteira no modal (opcional)
 [x] Categoria e carteira aparecem na lista
-[x] Carteira em LINHA SEPARADA no mobile [ATUALIZADO]
+[x] Carteira em LINHA SEPARADA no mobile
 [x] Saudação usa o nome do negócio
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
@@ -256,8 +268,9 @@ FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 
 FASE 8 — Landing Page + SEO  [CONCLUÍDA — parcial]
 [x] Landing page na raiz do site
+[x] Seção de carteiras na landing
 [x] Página de preços
-[x] WhatsApp flutuante na landing (canto inferior esquerdo) [ATUALIZADO]
+[x] WhatsApp flutuante na landing (canto inferior esquerdo)
 [ ] Páginas SEO: "controle financeiro para MEI"
 [ ] Google Search Console
 [ ] Analytics (Plausible ou GA4)
@@ -269,6 +282,7 @@ FASE 9 — Lançamento  [EM ANDAMENTO]
 [x] Política de privacidade (placeholder)
 [x] Footer com links
 [x] Canal de suporte (WhatsApp configurado)
+[x] Página /divulgar com banner para WhatsApp
 [ ] Backup automático do Supabase
 [ ] Monitoramento de erros (Sentry free)
 [ ] Testes com 5-10 autônomos reais
@@ -278,9 +292,9 @@ FASE 10 — Ajustes de UX Mobile  [CONCLUÍDA]
 [x] Contraste dos FABs
 [x] Contraste dos inputs
 [x] color-scheme: light no globals.css
-[x] FABs acima do bottom nav no mobile [ATUALIZADO]
-[x] Carteira em linha separada no mobile [ATUALIZADO]
-[x] WhatsApp reposicionado (landing: baixo esquerda; app: topo direita) [ATUALIZADO]
+[x] FABs acima do bottom nav no mobile
+[x] Carteira em linha separada no mobile
+[x] WhatsApp reposicionado (landing: baixo esquerda; app: topo direita)
 
 FASE 11 — Painel Admin  [CONCLUÍDA]
 [x] Adicionar plano 'super'
@@ -293,6 +307,7 @@ FASE 11 — Painel Admin  [CONCLUÍDA]
 [x] Excluir tenant apaga auth.users
 [x] Criar app/admin/page.tsx
 [x] Criar app/admin/content.tsx
+[x] Criar app/admin/layout.tsx (sidebar)
 [x] Link "🔧 Admin" no dashboard
 [x] Coluna ultimo_pagamento em subscriptions
 [x] Colunas Status/Últ.pgto/Próx.venc. no painel admin
@@ -304,6 +319,7 @@ FASE 11 — Painel Admin  [CONCLUÍDA]
 [x] Expiração automática (verificação no dashboard)
 [x] Função SQL expirar_planos_vencidos()
 [REMOVIDO] Cron job diário (decisão: sem cron)
+[x] Redesign do painel admin (emerald + sidebar)
 [ ] Badge "Concedido" para Pro sem assinatura
 [ ] Coluna "Última atividade" no painel admin
 
@@ -343,7 +359,7 @@ FASE 15 — Redesign Visual  [CONCLUÍDA]
 [x] Atualizar Label
 [x] Sidebar desktop (components/sidebar-nav.tsx)
 [x] Bottom nav mobile (no sidebar-nav.tsx)
-[x] Layouts: dashboard, pro, configuracoes
+[x] Layouts: dashboard, pro, configuracoes, admin
 [x] Redesenhar app/dashboard/page.tsx
 [x] Redesenhar botoes-transacao.tsx (FABs)
 [x] Redesenhar date-navigator.tsx
@@ -353,7 +369,25 @@ FASE 15 — Redesign Visual  [CONCLUÍDA]
 [x] Redesenhar app/pro/relatorio/content.tsx
 [x] Redesenhar app/pro/recorrentes/content.tsx
 [x] Redesenhar app/configuracoes/content.tsx
-[x] WhatsApp reposicionado: landing (baixo esquerda), app (topo direita)
+[x] Redesenhar app/admin/content.tsx
+[x] Redesenhar app/login/form.tsx
+[x] Redesenhar app/cadastro/form.tsx
+[x] Redesenhar app/page.tsx (landing) + seção de carteiras
+[x] WhatsApp reposicionado
+
+FASE 16 — Banner de Divulgação  [CONCLUÍDA]
+[x] Criar página /divulgar com banner 9:16
+[x] Banner para Status/Stories do WhatsApp
+[x] Legenda sugerida para envio
+[x] Visual: fundo escuro com gradient emerald
+
+FASE 17 — Edição de Perfil  [CONCLUÍDA]  [NOVA]
+[x] Criar endpoint GET + PATCH /api/perfil
+[x] Adicionar aba "Perfil" em /configuracoes
+[x] Formulário com nome do negócio + tipo
+[x] Email desabilitado (alteração via suporte)
+[x] Ordem das abas: Perfil → Categorias → Carteiras
+[x] Atualização do nome reflete no dashboard (saudação)
 
 🔹 PARTE 3 — REGRAS DE CONTINUIDADE
 
@@ -378,20 +412,21 @@ FORMATO DE RESPOSTA PADRÃO:
 
 ESTADO ATUAL:
 - Fase: 5 (Mercado Pago) — PAUSADA (antifraude bloqueando)
-- Fase ativa: 15 (Redesign Visual) — CONCLUÍDA
+- Fase ativa: 17 (Edição de Perfil) — CONCLUÍDA
 - Concluído até agora:
   * FASE 0 a 14: banco, auth, dashboard, Pro, admin, categorias,
     WhatsApp, carteiras, vencimento
-  * FASE 15: redesign completo + ajustes mobile (FABs, carteira, WhatsApp)
+  * FASE 15: redesign completo (todas as telas)
+  * FASE 16: banner para WhatsApp
+  * FASE 17: edição de perfil (nome do negócio + tipo)
   * Domínio dailyprofit.com.br funcionando + SSL
   * Resend verificado + SMTP configurado
   * Deploy ativo
   * Commit + push feitos
-- Última decisão: WhatsApp na landing (baixo esquerda) e no app (topo direita)
+- Última decisão: edição de perfil em /configuracoes (aba Perfil)
 - Pendências conhecidas:
   * SEO (páginas, Google Search Console, Analytics)
   * Reativar Mercado Pago quando o antifraude liberar
-  * Aplicar redesign nas telas /admin, /login, /cadastro (ainda antigas)
 - Próximo passo: A DEFINIR com o usuário
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS

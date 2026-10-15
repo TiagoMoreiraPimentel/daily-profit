@@ -4,7 +4,7 @@ import { CadastroForm } from './form'
 
 export default function CadastroPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-zinc-50 p-4"><p className="text-sm text-zinc-500">Carregando...</p></div>}>
+    <Suspense fallback={<AuthSkeleton />}>
       <CadastroContent />
     </Suspense>
   )
@@ -12,5 +12,18 @@ export default function CadastroPage() {
 
 async function CadastroContent() {
   await connection()
-  return <CadastroForm />
+
+  return (
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+      <CadastroForm />
+    </div>
+  )
+}
+
+function AuthSkeleton() {
+  return (
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md h-[500px] bg-white rounded-xl border border-zinc-200/80 animate-pulse" />
+    </div>
+  )
 }

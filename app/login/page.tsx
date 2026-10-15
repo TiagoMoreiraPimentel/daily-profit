@@ -4,7 +4,7 @@ import { LoginForm } from './form'
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-zinc-50 p-4"><p className="text-sm text-zinc-500">Carregando...</p></div>}>
+    <Suspense fallback={<AuthSkeleton />}>
       <LoginContent />
     </Suspense>
   )
@@ -12,5 +12,18 @@ export default function LoginPage() {
 
 async function LoginContent() {
   await connection()
-  return <LoginForm />
+
+  return (
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+      <LoginForm />
+    </div>
+  )
+}
+
+function AuthSkeleton() {
+  return (
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md h-96 bg-white rounded-xl border border-zinc-200/80 animate-pulse" />
+    </div>
+  )
 }
