@@ -8,16 +8,22 @@ const WHATSAPP_MENSAGEM = encodeURIComponent(
 export function WhatsAppButton({
   posicao = 'direita',
   tamanho = 'grande',
+  local = 'topo',
 }: {
   posicao?: 'direita' | 'esquerda'
   tamanho?: 'grande' | 'pequeno'
+  /** 'topo' = canto superior; 'rodape' = canto inferior */
+  local?: 'topo' | 'rodape'
 }) {
   const href = `https://wa.me/${WHATSAPP_NUMERO}?text=${WHATSAPP_MENSAGEM}`
 
-  const classesPosicao = posicao === 'direita' ? 'right-4 md:right-6' : 'left-4 md:left-6'
+  const classesPosicao =
+    posicao === 'direita' ? 'right-4 md:right-6' : 'left-4 md:left-6'
 
   const classesTamanho =
     tamanho === 'grande' ? 'w-12 h-12 md:w-14 md:h-14' : 'w-10 h-10 md:w-11 md:h-11'
+
+  const classesLocal = local === 'topo' ? 'top-4 md:top-6' : 'bottom-6'
 
   return (
     <a
@@ -26,7 +32,7 @@ export function WhatsAppButton({
       rel="noopener noreferrer"
       aria-label="Falar no WhatsApp"
       title="Falar no WhatsApp"
-      className={`fixed top-4 md:top-6 ${classesPosicao} z-40 ${classesTamanho} rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center`}
+      className={`fixed ${classesLocal} ${classesPosicao} z-40 ${classesTamanho} rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center`}
     >
       <svg
         viewBox="0 0 24 24"

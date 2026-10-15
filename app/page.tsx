@@ -372,7 +372,7 @@ async function HomeContent() {
       </footer>
 
       {/* WhatsApp flutuante */}
-      <WhatsAppButton posicao="direita" tamanho="grande" />
+      <WhatsAppButton posicao="esquerda" tamanho="grande" local="rodape" />
     </div>
   )
 }
