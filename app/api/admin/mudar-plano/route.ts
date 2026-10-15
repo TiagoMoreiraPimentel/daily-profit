@@ -33,16 +33,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
     }
 
-    // Usa admin client para atualizar
     const supabaseAdmin = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
+    // Se for pra pro sem data, mantém a data que já existe (ou fica null)
+    // Se for free ou super, limpa o vencimento
+    const updates: Record<string, any> = { plano: novoPlano }
+    if (novoPlano !== 'pro') {
+      updates.plano_vencimento = null
+    }
+
     const { error } = await supabaseAdmin
       .from('tenants')
-      .update({ plano: novoPlano })
+      .update(updates)
       .eq('id', tenantId)
 
     if (error) {

@@ -14,15 +14,20 @@ SOBRE O PRODUTO:
 - Plataforma: web responsivo (sem app nativo)
 
 DECISÕES TRAVADAS:
-- Modelo de cobrança: assinatura recorrente via Mercado Pago (/preapproval)
+- Modelo de cobrança (temporário): assinatura via WhatsApp
+  → usuário clica "Assinar Pro" → abre WhatsApp com mensagem pronta
+  → você gera link de pagamento no app do Mercado Pago (Pix/cartão/boleto)
+  → cliente paga → você libera acesso manualmente pelo painel /admin  [NOVO]
+- Modelo de cobrança (futuro): assinatura recorrente via Mercado Pago (/preapproval)
+  → código do Payment Brick mantido no /paywall.tsx (comentado)  [PAUSADO]
+  → motivo da pausa: erro CC_VAL_433 bloqueando todas as tentativas
 - Multi-tenant: shared schema com tenant_id + RLS no Supabase
 - Banco + Auth + Realtime: Supabase
 - Frontend: Next.js 16 + Tailwind v4 + TypeScript
 - Hospedagem front: Vercel (free) — CONFIGURADO
 - Domínio: dailyprofit.com.br (registro.br) — funcionando
 - Email transacional: Resend — VERIFICADO + SMTP CONFIGURADO
-- Preço Pro em produção: R$ 19,90/mês (a restaurar após teste)
-- Preço em TESTE (atual): R$ 1,00/mês
+- Preço Pro: R$ 19,90/mês
 - Planos: free, pro, super (super = admin/dev)
 - Plano Free: 30 transações/mês + lucro do dia + separação pessoal/negócio
 - Plano Pro: ilimitado + previsão de caixa + relatório + gráfico
@@ -60,12 +65,13 @@ DECISÕES TRAVADAS:
   Posição: direita na landing, esquerda nas telas internas
 - Termos e Privacidade: páginas públicas (não exigem login)
 - Footer com links (Termos, Privacidade, Suporte) no dashboard e telas Pro
-- Categorias por tenant (cada usuário tem as próprias) [NOVO]
+- Categorias por tenant (cada usuário tem as próprias)
   → Seeded com 15 categorias no cadastro; usuário pode renomear/excluir/criar
-- Tela /configuracoes: gerenciamento de categorias [NOVO]
-- CSV exportado com BOM UTF-8 + separador `;` (padrão BR) [NOVO]
-- Gráfico de entradas/saídas (donut) no relatório [NOVO]
-- Gráfico unificado por categoria (lista + barras) [NOVO]
+- Tela /configuracoes: gerenciamento de categorias
+- CSV exportado com BOM UTF-8 + separador `;` (padrão BR)
+- Gráfico de entradas/saídas (donut) no relatório
+- Gráfico unificado por categoria (lista + barras)
+- Saudação no dashboard usa nome do negócio (não o e-mail)  [NOVO]
 
 FUNCIONALIDADES CORE:
 - F1: Registrar transação em 5 segundos                          [x] FEITO
@@ -78,11 +84,12 @@ FUNCIONALIDADES CORE:
 - F8: Painel admin (/admin) — exclusivo do plano super           [x] FEITO
 - F9: Landing page na raiz                                       [x] FEITO
 - F10: Categorias personalizáveis por tenant                     [x] FEITO
+- F11: Assinatura via WhatsApp (fluxo temporário)                [x] FEITO
 
 REGRAS DE NEGÓCIO:
 - Limite do Free aplicado no BACKEND, não no frontend
 - Paywall em 3 momentos: suave (80%), bloqueio (100%), pós-valor (7 dias)
-- Webhook do Mercado Pago obrigatório para bloquear/liberar acesso
+- Assinatura atual: via WhatsApp + liberação manual pelo /admin
 - Sem dados sensíveis (não é saúde/financeiro regulado)
 - Painel admin só acessível para plano 'super'
 - Contagem de transações é live (reflete o estado atual do banco)
@@ -118,7 +125,7 @@ FASE 1 — Banco de Dados  [CONCLUÍDA]
 [x] Criar trigger updated_at
 [x] Seed de categorias padrão (15 categorias)
 [x] Criar função custom_access_token_hook (criada, NÃO ativada)
-[x] Criar trigger handle_new_user (cria tenant + user + categorias no cadastro)
+[x] Criar trigger handle_new_user (cria tenant + user + categorias)
 [x] Criar política auth_admin_read_users
 [x] Política de leitura pública para categorias_padrao
 [x] Coluna ultimo_pagamento em subscriptions
@@ -144,7 +151,7 @@ FASE 2 — Autenticação + Onboarding  [CONCLUÍDA]
 [x] Campos do formulário limpos após cadastro
 [x] Trigger handle_new_user recriado (não existia)
 [x] Usuários órfãos corrigidos via SQL
-[x] SMTP próprio configurado (Resend) → rate limit resolvido  [RESOLVIDO]
+[x] SMTP próprio configurado (Resend) → rate limit resolvido
 
 FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] F1: Tela de registrar transação (entrada/saída, valor, descrição)
@@ -161,8 +168,9 @@ FASE 3 — Funcionalidades Core  [CONCLUÍDA]
 [x] Navegação por data no dashboard (setas + calendário)
 [x] Cards sincronizados com a data selecionada
 [x] Registrar transação na data selecionada (não só hoje)
-[x] Select de categoria no modal (opcional)  [NOVO]
-[x] Categoria aparece na lista de transações  [NOVO]
+[x] Select de categoria no modal (opcional)
+[x] Categoria aparece na lista de transações
+[x] Saudação usa o nome do negócio (não o e-mail)  [NOVO]
 
 FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Aplicar limite de 30 transações/mês no backend (RLS + função)
@@ -172,7 +180,7 @@ FASE 4 — Limites + Paywall  [CONCLUÍDA — parcial]
 [x] Bloco AssinaturaInfo no dashboard (status da assinatura)
 [ ] Email pós-valor (7 dias de uso)  [ADIADO — sem domínio/email]
 
-FASE 5 — Mercado Pago  [EM ANDAMENTO — verificação pendente]
+FASE 5 — Mercado Pago  [PAUSADA — usando WhatsApp temporariamente]
 [x] Criar conta Mercado Pago Developers
 [x] Criar aplicação no painel
 [x] Configurar variáveis de ambiente (.env + Vercel)
@@ -181,16 +189,18 @@ FASE 5 — Mercado Pago  [EM ANDAMENTO — verificação pendente]
 [x] Payment Brick (Checkout Bricks) no frontend para tokenizar cartão
 [x] Webhook /api/webhooks/mercadopago configurado (200 OK)
 [x] Tratar status: authorized, paused, cancelled, pending
-[x] Bloquear/liberar funções Pro conforme status
 [x] Proxy exclui /api/* do matcher (webhook não passa por auth)
 [x] Migrar para credenciais de PRODUÇÃO
-[x] Preço reduzido para R$ 1,00 para teste
 [x] Webhook salva ultimo_pagamento e proxima_cobranca
-[x] Teste real: assinatura criada, plano Pro ativado, painel admin OK
-[~] Verificar se cobrança de R$ 1,00 aparece no Mercado Pago após 1h
-    → Pendente de verificação (comportamento padrão: validação é estornada;
-      cobrança real ocorre ~1h após a autorização)
-[ ] Reverter preço para R$ 19,90 após o teste
+[!] ERRO CC_VAL_433: motor antifraude do Mercado Pago bloqueando
+    todas as tentativas de assinatura (com cartões diferentes,
+    após ativar produção, após 72h de espera)
+    → Confirmado como comportamento do antifraude (não é bug de código)
+    → Caso idêntico documentado no Reclame Aqui
+[PAUSADO] Payment Brick comentado no /paywall.tsx (guardado para futuro)
+[PAUSADO] Fluxo de assinatura recorrente via Mercado Pago
+[ATIVO] Fluxo de assinatura via WhatsApp + liberação manual
+[ ] Reativar Mercado Pago quando o antifraude liberar (ou com apoio do suporte)
 
 FASE 6 — Link de Cobrança (F4)  [REMOVIDA]
 [REMOVIDO] Motivo: exige OAuth + Split de Pagamentos (inviável para MVP).
@@ -200,11 +210,11 @@ FASE 7 — Funcionalidades Pro  [CONCLUÍDA]
 [x] Tela de cadastro de contas recorrentes (/pro/recorrentes)
 [x] Refresh automático da lista de recorrentes
 [x] F6: Relatório mensal de lucro (com exportação CSV)
-[x] CSV com BOM UTF-8 + separador `;` + formatação BR  [MELHORADO]
-[x] CSV agrupado em: Resumo, Movimentações, Por Categoria  [MELHORADO]
+[x] CSV com BOM UTF-8 + separador `;` + formatação BR
+[x] CSV agrupado em: Resumo, Movimentações, Por Categoria
 [x] F7: Gráfico de evolução dos últimos 6 meses
-[x] Gráfico de entradas/saídas (donut)  [NOVO]
-[x] Gráfico unificado por categoria (lista + barras)  [NOVO]
+[x] Gráfico de entradas/saídas (donut)
+[x] Gráfico unificado por categoria (lista + barras)
 [x] Telas Pro acessíveis para super também
 [ ] Envio de relatório por e-mail  [ADIADO — sem domínio]
 
@@ -243,7 +253,7 @@ FASE 11 — Painel Admin  [CONCLUÍDA]
 [x] Criar lib/admin.ts (getAdminInfo + isSuper)
 [x] Criar app/api/admin/mudar-plano/route.ts (com service_role)
 [x] Criar app/api/admin/excluir-tenant/route.ts
-[x] Excluir tenant apaga também auth.users (exclusão completa)  [MELHORADO]
+[x] Excluir tenant apaga também auth.users (exclusão completa)
 [x] Criar app/admin/page.tsx (usa service_role)
 [x] Criar app/admin/content.tsx (tabela + busca + ações)
 [x] Link "🔧 Admin" no dashboard (só para super)
@@ -253,7 +263,7 @@ FASE 11 — Painel Admin  [CONCLUÍDA]
 [ ] Badge "Concedido" para Pro sem assinatura  [MELHORIA FUTURA]
 [ ] Coluna "Última atividade" no painel admin  [MELHORIA FUTURA]
 
-FASE 12 — Categorias Personalizáveis  [CONCLUÍDA]  [NOVA]
+FASE 12 — Categorias Personalizáveis  [CONCLUÍDA]
 [x] Criar tabela categorias (por tenant) + RLS
 [x] Atualizar trigger handle_new_user (seeda 15 categorias)
 [x] Popular tenants existentes com as 15 categorias
@@ -264,6 +274,15 @@ FASE 12 — Categorias Personalizáveis  [CONCLUÍDA]  [NOVA]
 [x] Link "⚙️ Configurações" no dashboard
 [x] Select de categoria no modal de nova transação
 [x] Categoria aparece na lista de transações
+
+FASE 13 — Assinatura via WhatsApp  [CONCLUÍDA]  [NOVA]
+[x] Substituir botão "Assinar Pro" por link do WhatsApp
+[x] Mensagem pré-preenchida no WhatsApp
+[x] Código do Payment Brick comentado no /paywall.tsx
+[x] BannerLimite com botão de WhatsApp
+[x] ModalLimiteAtingido com botão de WhatsApp
+[x] AssinaturaInfo mostrando "Plano Pro ativo" mesmo sem assinatura MP
+[x] Preço voltou para R$ 19,90 nos textos
 
 🔹 PARTE 3 — REGRAS DE CONTINUIDADE
 
@@ -287,32 +306,31 @@ FORMATO DE RESPOSTA PADRÃO:
 - Próximo passo sugerido (1-2 linhas)
 
 ESTADO ATUAL:
-- Fase: 5 (Mercado Pago) — EM ANDAMENTO (verificação de cobrança pendente)
+- Fase: 5 (Mercado Pago) — PAUSADA (antifraude bloqueando)
+- Fase ativa: 13 (Assinatura via WhatsApp) — CONCLUÍDA
 - Concluído até agora:
   * FASE 0: Supabase + Mercado Pago + Vercel + GitHub + domínio funcionando
   * FASE 1: banco completo (RLS de super removida, tabela categorias)
   * FASE 2: auth completo (SMTP configurado, rate limit resolvido)
-  * FASE 3: dashboard completo (com select de categoria)
+  * FASE 3: dashboard completo (com select de categoria, saudação com nome do negócio)
   * FASE 4: limite Free + botão Assinar + bloco AssinaturaInfo
-  * FASE 5: Mercado Pago em produção (assinatura criada, plano Pro ativado);
-    preço R$ 1,00 para teste; cobrança pendente de verificação após 1h
-  * FASE 7: previsão, recorrentes, relatório, CSV melhorado,
-    gráficos (evolução, donut entradas/saídas, categorias)
+  * FASE 5: Mercado Pago PAUSADO (CC_VAL_433 do antifraude)
+  * FASE 7: previsão, recorrentes, relatório, CSV melhorado, gráficos
   * FASE 8: landing page
-  * FASE 9: termos e privacidade (públicos), SSL, WhatsApp
+  * FASE 9: termos e privacidade, SSL, WhatsApp
   * FASE 10: UX mobile
-  * FASE 11: painel admin completo (usa service_role, exclui auth.users)
-  * FASE 12: categorias personalizáveis por tenant + tela /configuracoes
+  * FASE 11: painel admin completo
+  * FASE 12: categorias personalizáveis
+  * FASE 13: assinatura via WhatsApp + liberação manual
   * Domínio dailyprofit.com.br funcionando + SSL
   * Resend verificado + SMTP configurado
   * Deploy ativo
   * Commit + push feitos
-- Última decisão: aguardar 1h para verificar cobrança de R$ 1,00
+- Última decisão: pausar Mercado Pago, usar WhatsApp como fluxo de assinatura
 - Pendências conhecidas:
-  * Verificar se cobrança de R$ 1,00 aparece no Mercado Pago após 1h
-  * Reverter preço para R$ 19,90 depois do teste
   * SEO (páginas, Google Search Console, Analytics)
-- Próximo passo: verificar cobrança após 1h; se OK, reverter preço para R$ 19,90
+  * Reativar Mercado Pago quando o antifraude liberar
+- Próximo passo: A DEFINIR com o usuário (SEO, analytics, ou reativar MP)
 
 🔹 PARTE 4 — CREDENCIAIS E ACESSOS
 

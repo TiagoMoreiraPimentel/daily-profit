@@ -1,8 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { initMercadoPago, Payment } from '@mercadopago/sdk-react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+
+/**
+ * ⚠️ ATENÇÃO: O código de integração com o Mercado Pago (Payment Brick)
+ * está mantido abaixo, mas COMENTADO, porque o antifraude do MP está
+ * bloqueando as assinaturas em produção (erro CC_VAL_433).
+ *
+ * Para reativar no futuro:
+ * 1. Descomentar os imports e o código abaixo
+ * 2. Restaurar o `paywall.tsx` original no dashboard
+ * 3. Testar em uma conta/cartão novo após o bloqueio expirar
+ */
+
+/*
+import { useEffect } from 'react'
+import { initMercadoPago, Payment } from '@mercadopago/sdk-react'
 
 let mpInicializado = false
 
@@ -33,141 +47,14 @@ async function processarAssinatura(cardTokenId: string, payerEmail: string) {
 }
 
 export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
-  const [erro, setErro] = useState<string | null>(null)
-  const [processando, setProcessando] = useState(false)
-  const [sdkPronto, setSdkPronto] = useState(false)
-  const [sucesso, setSucesso] = useState(false)
-
-  useEffect(() => {
-    if (mpInicializado) {
-      setSdkPronto(true)
-      return
-    }
-    try {
-      initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY!, {
-        locale: 'pt-BR',
-      })
-      mpInicializado = true
-      setSdkPronto(true)
-    } catch (e) {
-      console.error('Erro ao inicializar Mercado Pago SDK:', e)
-      setErro('Falha ao inicializar o SDK do Mercado Pago.')
-    }
-  }, [])
-
-  async function handleSubmit({ formData }: { formData: any }) {
-    console.log('Dados do Brick:', formData)
-    setProcessando(true)
-    setErro(null)
-
-    try {
-      const data = await processarAssinatura(
-        formData.token,
-        formData.payer?.email
-      )
-
-      console.log('Resposta da assinatura:', data)
-
-      if (data.status === 'authorized' || data.status === 'pending') {
-        setSucesso(true)
-
-        try {
-          await fetch('/api/mercadopago/sincronizar', { method: 'POST' })
-        } catch (e) {
-          console.error('Erro ao sincronizar:', e)
-        }
-
-        setTimeout(() => {
-          window.location.href = '/dashboard'
-        }, 2000)
-      } else {
-        setErro('Assinatura criada com status: ' + data.status)
-      }
-    } catch (e: any) {
-      console.error('Erro ao processar:', e)
-      setErro(e.message || 'Erro ao processar assinatura')
-    } finally {
-      setProcessando(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-zinc-900 mb-2">
-          Assinar Plano Pro — R$ 5,00/mês
-        </h2>
-        <p className="text-sm text-zinc-600 mb-4">
-          Preencha os dados do cartão para ativar sua assinatura.
-        </p>
-
-        {erro && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded mb-4">
-            ❌ {erro}
-          </div>
-        )}
-
-        {sucesso && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded mb-4">
-            ✅ Assinatura criada com sucesso! Ativando seu plano...
-            <button
-              onClick={() => (window.location.href = '/dashboard')}
-              className="block mt-2 text-green-800 underline text-xs"
-            >
-              Ir para o dashboard agora
-            </button>
-          </div>
-        )}
-
-        {processando ? (
-          <div className="py-8 text-center">
-            <p className="text-sm text-zinc-500">Processando pagamento...</p>
-          </div>
-        ) : sucesso ? (
-          <div className="py-8 text-center">
-            <p className="text-sm text-zinc-500">Redirecionando para o dashboard...</p>
-          </div>
-        ) : !sdkPronto ? (
-          <div className="py-8 text-center">
-            <p className="text-sm text-zinc-500">Carregando SDK...</p>
-          </div>
-        ) : (
-          <Payment
-            initialization={{ amount: 5.0 }}
-            customization={{
-              paymentMethods: {
-                creditCard: 'all',
-                prepaidCard: 'all',
-              },
-            }}
-            onReady={() => {
-              console.log('Brick pronto')
-            }}
-            onError={(error) => {
-              console.error('Erro no Brick (detalhado):', JSON.stringify(error))
-              console.error('Erro no Brick (objeto):', error)
-              setErro('Falha ao carregar o formulário. Veja o console (F12).')
-            }}
-            onSubmit={async (param) => {
-              await handleSubmit(param)
-            }}
-          />
-        )}
-
-        <div className="mt-4">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={onFechar}
-            disabled={processando || sucesso}
-          >
-            Cancelar
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
+  // ... código original mantido aqui
 }
+*/
+
+const WHATSAPP_NUMERO = '5511992233306'
+const WHATSAPP_MENSAGEM = encodeURIComponent(
+  'Olá! Quero assinar o plano Pro do Daily Profit. Pode me enviar o link de pagamento?'
+)
 
 export function BannerLimite({
   transacoesMes,
@@ -176,27 +63,81 @@ export function BannerLimite({
   transacoesMes: number
   limite: number
 }) {
-  const [mostrarModal, setMostrarModal] = useState(false)
+  const href = `https://wa.me/${WHATSAPP_NUMERO}?text=${WHATSAPP_MENSAGEM}`
 
   return (
-    <>
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <p className="text-sm font-medium text-amber-900">
-            ⚠️ Você já usou {transacoesMes} de {limite} transações do plano Free
-          </p>
-          <p className="text-xs text-amber-700 mt-1">
-            Faltam {limite - transacoesMes} transações para atingir o limite.
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <p className="text-sm font-medium text-amber-900">
+          ⚠️ Você já usou {transacoesMes} de {limite} transações do plano Free
+        </p>
+        <p className="text-xs text-amber-700 mt-1">
+          Faltam {limite - transacoesMes} transações para atingir o limite.
+          Assine o Pro para ilimitado.
+        </p>
+      </div>
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
+          ⭐ Assinar Pro
+        </Button>
+      </a>
+    </div>
+  )
+}
+
+/**
+ * Modal de limite atingido — versão atual (WhatsApp).
+ * A versão com Payment Brick está comentada acima.
+ */
+export function ModalLimiteAtingido({ onFechar }: { onFechar: () => void }) {
+  const href = `https://wa.me/${WHATSAPP_NUMERO}?text=${WHATSAPP_MENSAGEM}`
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <h2 className="text-xl font-bold text-zinc-900 mb-2">
+          Limite do plano Free atingido
+        </h2>
+        <p className="text-sm text-zinc-600 mb-4">
+          Você já registrou as 30 transações do plano Free neste mês. Para continuar
+          registrando sem limites, assine o plano Pro.
+        </p>
+
+        <div className="bg-zinc-50 rounded-md p-3 mb-4">
+          <p className="text-xs text-zinc-500 uppercase tracking-wide">Plano Pro</p>
+          <p className="text-lg font-bold text-zinc-900">R$ 19,90/mês</p>
+          <ul className="text-xs text-zinc-600 mt-2 space-y-1">
+            <li>✅ Transações ilimitadas</li>
+            <li>✅ Previsão de caixa</li>
+            <li>✅ Relatório mensal (CSV)</li>
+            <li>✅ Gráfico de evolução</li>
+          </ul>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
+          <p className="text-xs text-amber-800">
+            💬 Para assinar, fale conosco pelo WhatsApp. Vamos te enviar um link de
+            pagamento (Pix, cartão ou boleto) e liberar seu acesso assim que
+            confirmarmos.
           </p>
         </div>
-        <Button size="sm" onClick={() => setMostrarModal(true)}>
-          Assinar Pro — R$ 5,00/mês
-        </Button>
-      </div>
 
-      {mostrarModal && (
-        <ModalLimiteAtingido onFechar={() => setMostrarModal(false)} />
-      )}
-    </>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={onFechar}>
+            Depois
+          </Button>
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1"
+          >
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+              💬 Falar no WhatsApp
+            </Button>
+          </a>
+        </div>
+      </div>
+    </div>
   )
 }

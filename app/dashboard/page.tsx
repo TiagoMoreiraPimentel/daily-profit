@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import Link from 'next/link'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
 import { getResumoPorData, getResumoMes } from '@/lib/queries'
 import { getStatusPlano } from '@/lib/plano'
@@ -37,7 +38,7 @@ async function DashboardContent({
 
   const { data: profile } = await supabase
     .from('users')
-    .select('nome, tenant_id, tenants(nome_negocio, plano)')
+    .select('nome, tenant_id, tenants(nome_negocio, plano, plano_vencimento)')
     .eq('id', user.id)
     .single()
 
@@ -46,7 +47,41 @@ async function DashboardContent({
   }
 
   const nomeNegocio = (profile?.tenants as { nome_negocio?: string; plano?: string } | null)?.nome_negocio
-  const plano = (profile?.tenants as { nome_negocio?: string; plano?: string } | null)?.plano ?? 'free'
+  let plano = (profile?.tenants as { nome_negocio?: string; plano?: string; plano_vencimento?: string } | null)?.plano ?? 'free'
+  const planoVencimento = (profile?.tenants as { nome_negocio?: string; plano?: string; plano_vencimento?: string } | null)?.plano_vencimento
+
+  // Verifica se o plano Pro venceu (comparação com a data de hoje)
+  if (plano === 'pro' && planoVencimento) {
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+
+    const [ano, mes, dia] = planoVencimento.split('-').map(Number)
+    const dataVenc = new Date(ano, mes - 1, dia)
+    dataVenc.setHours(0, 0, 0, 0)
+
+    if (dataVenc < hoje) {
+      // Plano venceu: rebaixa para free usando service_role
+      try {
+        const supabaseAdmin = createAdminClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        )
+
+        await supabaseAdmin
+          .from('tenants')
+          .update({ plano: 'free', plano_vencimento: null })
+          .eq('id', profile.tenant_id)
+
+        // Atualiza a variável local para refletir a mudança imediatamente
+        plano = 'free'
+
+        console.log(`⏰ Plano Pro vencido — Tenant ${profile.tenant_id} → free`)
+      } catch (e) {
+        console.error('Erro ao expirar plano:', e)
+      }
+    }
+  }
 
   const params = await searchParams
   const hoje = new Date().toISOString().split('T')[0]
@@ -81,10 +116,9 @@ async function DashboardContent({
       <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">
-            Olá, {profile?.nome || 'usuário'} 👋
+            Olá, {nomeNegocio || profile?.nome || 'usuário'} 👋
           </h1>
           <p className="text-zinc-500 mt-1 text-sm flex items-center gap-2">
-            {nomeNegocio}
             <span
               className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 ehSuper
@@ -246,7 +280,6 @@ async function DashboardContent({
 
       <AppFooter />
 
-      {/* WhatsApp flutuante (esquerda, para não conflitar com os FABs) */}
       <WhatsAppButton posicao="esquerda" tamanho="pequeno" />
     </div>
   )

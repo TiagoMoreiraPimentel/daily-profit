@@ -10,6 +10,7 @@ type Tenant = {
   tipo: string
   plano: string
   criado_em: string
+  plano_vencimento: string | null
   dono: { nome: string; email: string }
   totalTransacoes: number
   assinatura: {
@@ -21,13 +22,8 @@ type Tenant = {
 
 function formatarData(dataISO: string | null) {
   if (!dataISO) return '—'
-  const data = new Date(dataISO)
-  return data.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: 'America/Sao_Paulo',
-  })
+  const [ano, mes, dia] = dataISO.split('-')
+  return `${dia}/${mes}/${ano}`
 }
 
 function corDoPlano(plano: string) {
@@ -56,6 +52,37 @@ function rotuloDoStatus(status: string | null) {
   return mapa[status] ?? status
 }
 
+// Retorna:
+// { label: string, cor: string, dias: number | null }
+function situacaoVencimento(vencimento: string | null, plano: string) {
+  if (plano === 'super') {
+    return { label: '∞', cor: 'text-purple-700', dias: null }
+  }
+  if (plano !== 'pro' || !vencimento) {
+    return { label: '—', cor: 'text-zinc-400', dias: null }
+  }
+
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  const [ano, mes, dia] = vencimento.split('-').map(Number)
+  const dataVenc = new Date(ano, mes - 1, dia)
+  dataVenc.setHours(0, 0, 0, 0)
+
+  const diffMs = dataVenc.getTime() - hoje.getTime()
+  const dias = Math.round(diffMs / (1000 * 60 * 60 * 24))
+
+  if (dias < 0) {
+    return { label: `Vencido (${Math.abs(dias)}d)`, cor: 'text-red-600 font-semibold', dias }
+  }
+  if (dias === 0) {
+    return { label: 'Vence hoje', cor: 'text-red-600 font-semibold', dias }
+  }
+  if (dias <= 3) {
+    return { label: `Vence em ${dias}d`, cor: 'text-amber-600 font-semibold', dias }
+  }
+  return { label: `Em ${dias}d`, cor: 'text-zinc-600', dias }
+}
+
 export function AdminContent({
   admin,
   tenants,
@@ -66,6 +93,8 @@ export function AdminContent({
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [filtro, setFiltro] = useState('')
+  const [editandoVencimento, setEditandoVencimento] = useState<string | null>(null)
+  const [dataInput, setDataInput] = useState('')
 
   async function mudarPlano(tenantId: string, novoPlano: string) {
     if (!confirm(`Mudar o plano deste tenant para "${novoPlano}"?`)) return
@@ -87,9 +116,36 @@ export function AdminContent({
     }
   }
 
+  async function definirVencimento(tenantId: string) {
+    if (!dataInput) {
+      alert('Escolha uma data de início')
+      return
+    }
+    setLoading(tenantId)
+    try {
+      const res = await fetch('/api/admin/definir-vencimento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId, dataInicio: dataInput }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        alert(data.error || 'Erro ao definir vencimento')
+      } else {
+        const data = await res.json()
+        alert(`✅ Vencimento definido para ${formatarData(data.plano_vencimento)}`)
+        setEditandoVencimento(null)
+        setDataInput('')
+        router.refresh()
+      }
+    } finally {
+      setLoading(null)
+    }
+  }
+
   async function excluirTenant(tenantId: string, nome: string) {
     if (!confirm(`⚠️ Excluir o tenant "${nome}"?`)) return
-    if (!confirm('⚠️ Isso apagará TODOS os dados (transações, usuários, assinaturas). Continuar?')) return
+    if (!confirm('⚠️ Isso apagará TODOS os dados. Continuar?')) return
     setLoading(tenantId)
     try {
       const res = await fetch('/api/admin/excluir-tenant', {
@@ -169,9 +225,9 @@ export function AdminContent({
                   <th className="text-left px-4 py-3 font-medium text-zinc-700">Negócio</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-700">Dono</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-700">Plano</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-700">Vencimento</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-700">Status</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-700">Últ. pgto</th>
-                  <th className="text-left px-4 py-3 font-medium text-zinc-700">Próx. venc.</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-700">Trans.</th>
                   <th className="text-right px-4 py-3 font-medium text-zinc-700">Ações</th>
                 </tr>
@@ -184,67 +240,128 @@ export function AdminContent({
                     </td>
                   </tr>
                 ) : (
-                  filtrados.map((t) => (
-                    <tr key={t.id} className={loading === t.id ? 'opacity-50' : ''}>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-zinc-900">{t.nome_negocio}</p>
-                        <p className="text-xs text-zinc-500">{t.tipo}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="text-zinc-900">{t.dono.nome || '—'}</p>
-                        <p className="text-xs text-zinc-500">{t.dono.email || '—'}</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-xs font-medium px-2 py-1 rounded-full ${corDoPlano(t.plano)}`}
-                        >
-                          {t.plano === 'super' ? '⭐ Super' : t.plano === 'pro' ? 'Pro' : 'Free'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${corDoStatus(
-                            t.assinatura?.status ?? null
-                          )}`}
-                        >
-                          {rotuloDoStatus(t.assinatura?.status ?? null)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-zinc-700 text-xs whitespace-nowrap">
-                        {formatarData(t.assinatura?.ultimo_pagamento ?? null)}
-                      </td>
-                      <td className="px-4 py-3 text-zinc-700 text-xs whitespace-nowrap">
-                        {formatarData(t.assinatura?.proxima_cobranca ?? null)}
-                      </td>
-                      <td className="px-4 py-3 text-zinc-700">{t.totalTransacoes}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <select
-                            value={t.plano}
-                            onChange={(e) => mudarPlano(t.id, e.target.value)}
-                            disabled={loading === t.id}
-                            className="text-xs px-2 py-1 rounded border border-zinc-300 bg-white text-zinc-900 cursor-pointer"
+                  filtrados.map((t) => {
+                    const sit = situacaoVencimento(t.plano_vencimento, t.plano)
+                    const estaEditando = editandoVencimento === t.id
+
+                    return (
+                      <tr key={t.id} className={loading === t.id ? 'opacity-50' : ''}>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-zinc-900">{t.nome_negocio}</p>
+                          <p className="text-xs text-zinc-500">{t.tipo}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-zinc-900">{t.dono.nome || '—'}</p>
+                          <p className="text-xs text-zinc-500">{t.dono.email || '—'}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-xs font-medium px-2 py-1 rounded-full ${corDoPlano(t.plano)}`}
                           >
-                            <option value="free">Free</option>
-                            <option value="pro">Pro</option>
-                            <option value="super">Super</option>
-                          </select>
-                          <button
-                            onClick={() => excluirTenant(t.id, t.nome_negocio)}
-                            disabled={loading === t.id}
-                            className="text-zinc-300 hover:text-red-600 transition-colors p-1"
-                            title="Excluir tenant"
+                            {t.plano === 'super' ? '⭐ Super' : t.plano === 'pro' ? 'Pro' : 'Free'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs whitespace-nowrap">
+                          {estaEditando ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="date"
+                                value={dataInput}
+                                onChange={(e) => setDataInput(e.target.value)}
+                                className="text-xs px-2 py-1 rounded border border-zinc-300 bg-white text-zinc-900"
+                              />
+                              <button
+                                onClick={() => definirVencimento(t.id)}
+                                className="text-xs text-green-700 hover:text-green-900 font-medium"
+                                title="Salvar"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditandoVencimento(null)
+                                  setDataInput('')
+                                }}
+                                className="text-xs text-zinc-400 hover:text-zinc-900"
+                                title="Cancelar"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <div>
+                                <p className="text-zinc-700">
+                                  {formatarData(t.plano_vencimento)}
+                                </p>
+                                <p className={`text-xs ${sit.cor}`}>{sit.label}</p>
+                              </div>
+                              {t.plano !== 'super' && (
+                                <button
+                                  onClick={() => {
+                                    setEditandoVencimento(t.id)
+                                    setDataInput(
+                                      t.plano_vencimento ||
+                                        new Date().toISOString().split('T')[0]
+                                    )
+                                  }}
+                                  className="text-zinc-300 hover:text-blue-600 transition-colors"
+                                  title="Definir/alterar vencimento"
+                                >
+                                  ✏️
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${corDoStatus(
+                              t.assinatura?.status ?? null
+                            )}`}
                           >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {rotuloDoStatus(t.assinatura?.status ?? null)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-zinc-700 text-xs whitespace-nowrap">
+                          {formatarData(t.assinatura?.ultimo_pagamento ?? null)}
+                        </td>
+                        <td className="px-4 py-3 text-zinc-700">{t.totalTransacoes}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <select
+                              value={t.plano}
+                              onChange={(e) => mudarPlano(t.id, e.target.value)}
+                              disabled={loading === t.id}
+                              className="text-xs px-2 py-1 rounded border border-zinc-300 bg-white text-zinc-900 cursor-pointer"
+                            >
+                              <option value="free">Free</option>
+                              <option value="pro">Pro</option>
+                              <option value="super">Super</option>
+                            </select>
+                            <button
+                              onClick={() => excluirTenant(t.id, t.nome_negocio)}
+                              disabled={loading === t.id}
+                              className="text-zinc-300 hover:text-red-600 transition-colors p-1"
+                              title="Excluir tenant"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
                 )}
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="mt-4 text-xs text-zinc-500">
+          💡 Clique no ✏️ ao lado do vencimento para definir/alterar. O vencimento é
+          calculado como <strong>1 mês após a data de início</strong> escolhida.
+          Quando vencer, o plano volta para <strong>Free</strong> automaticamente.
         </div>
       </div>
     </div>

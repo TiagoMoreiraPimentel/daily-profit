@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/expirar-planos",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

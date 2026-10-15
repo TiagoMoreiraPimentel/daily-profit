@@ -31,9 +31,16 @@ async function AdminWrapper() {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
+  // Expira planos vencidos antes de carregar
+  try {
+    await supabaseAdmin.rpc('expirar_planos_vencidos')
+  } catch (e) {
+    console.warn('Não foi possível expirar planos (função RPC):', e)
+  }
+
   const { data: tenants } = await supabaseAdmin
     .from('tenants')
-    .select('id, nome_negocio, tipo, plano, criado_em')
+    .select('id, nome_negocio, tipo, plano, criado_em, plano_vencimento')
     .order('criado_em', { ascending: false })
 
   const { data: users } = await supabaseAdmin
@@ -76,6 +83,7 @@ async function AdminWrapper() {
     tipo: t.tipo,
     plano: t.plano,
     criado_em: t.criado_em,
+    plano_vencimento: t.plano_vencimento ?? null,
     dono: usuariosPorTenant[t.id] ?? { nome: '—', email: '—' },
     totalTransacoes: contagemPorTenant[t.id] ?? 0,
     assinatura: assinaturasPorTenant[t.id] ?? null,
