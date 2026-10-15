@@ -10,7 +10,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
-    const { id, tipo, valor, descricao, natureza, categoria } = await request.json()
+    const { id, tipo, valor, descricao, natureza, categoria, carteira_id } =
+      await request.json()
 
     if (!id || !tipo || !valor) {
       return NextResponse.json({ error: 'Dados obrigatórios' }, { status: 400 })
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
         descricao: descricao?.trim() || null,
         natureza,
         categoria: categoria || null,
+        carteira_id: carteira_id || null,
       })
       .eq('id', id)
 

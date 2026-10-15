@@ -12,6 +12,7 @@ type Transacao = {
   descricao: string | null
   natureza: 'negocio' | 'pessoal'
   categoria: string | null
+  carteira_id: string | null
 }
 
 export function AcoesTransacao({

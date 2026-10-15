@@ -1,4 +1,5 @@
 import { getTransacoesPorData } from '@/lib/queries'
+import { createClient } from '@/lib/supabase-server'
 import { AcoesTransacao } from './acoes-transacao'
 
 function formatarMoeda(valor: number) {
@@ -26,6 +27,17 @@ export async function TransacaoList({
 }) {
   const transacoes = await getTransacoesPorData(data)
 
+  // Busca as carteiras do tenant para cruzar com as transações
+  const supabase = await createClient()
+  const { data: carteiras } = await supabase
+    .from('carteiras')
+    .select('id, nome')
+
+  const nomePorCarteira: Record<string, string> = {}
+  carteiras?.forEach((c) => {
+    nomePorCarteira[c.id] = c.nome
+  })
+
   if (transacoes.length === 0) {
     return (
       <div className="text-center py-8 text-zinc-500 text-sm">
@@ -51,9 +63,12 @@ export async function TransacaoList({
                   <p className="text-sm font-medium text-zinc-900 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-zinc-400 truncate">
                     {formatarHora(t.criado_em)}
                     {t.categoria && ` · ${t.categoria}`}
+                    {t.carteira_id && nomePorCarteira[t.carteira_id] && (
+                      <> · 💳 {nomePorCarteira[t.carteira_id]}</>
+                    )}
                   </p>
                 </div>
                 <span
@@ -72,6 +87,7 @@ export async function TransacaoList({
                     descricao: t.descricao,
                     natureza: t.natureza,
                     categoria: t.categoria,
+                    carteira_id: t.carteira_id,
                   }}
                 />
               </li>
@@ -92,9 +108,12 @@ export async function TransacaoList({
                   <p className="text-sm text-zinc-600 truncate">
                     {t.descricao || (t.tipo === 'entrada' ? 'Entrada' : 'Saída')}
                   </p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-zinc-400 truncate">
                     {formatarHora(t.criado_em)}
                     {t.categoria && ` · ${t.categoria}`}
+                    {t.carteira_id && nomePorCarteira[t.carteira_id] && (
+                      <> · 💳 {nomePorCarteira[t.carteira_id]}</>
+                    )}
                   </p>
                 </div>
                 <span className="text-sm text-zinc-500 whitespace-nowrap">
@@ -109,6 +128,7 @@ export async function TransacaoList({
                     descricao: t.descricao,
                     natureza: t.natureza,
                     categoria: t.categoria,
+                    carteira_id: t.carteira_id,
                   }}
                 />
               </li>

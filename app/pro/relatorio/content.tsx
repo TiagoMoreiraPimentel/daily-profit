@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import { ExportarCSV } from './exportar-csv'
 import { GraficoEvolucao } from './grafico'
 import { GraficoEntradasSaidas } from './grafico-entradas-saidas'
+import { SaldosCarteiras } from './saldos-carteiras'
 import { WhatsAppButton } from '@/components/whatsapp-button'
 import { AppFooter } from '@/components/app-footer'
 
@@ -163,6 +164,9 @@ export async function RelatorioContent() {
             nomeNegocio={dados.nomeNegocio}
           />
         </div>
+
+        {/* Saldos por carteira */}
+        <SaldosCarteiras />
 
         {/* Gráfico de entradas vs. saídas */}
         <div className="bg-white rounded-lg border border-zinc-200 p-6 mb-8">

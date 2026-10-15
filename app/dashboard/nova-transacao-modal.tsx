@@ -14,6 +14,14 @@ type Transacao = {
   descricao: string | null
   natureza: 'negocio' | 'pessoal'
   categoria: string | null
+  carteira_id: string | null
+}
+
+type Carteira = {
+  id: string
+  nome: string
+  tipo: string
+  cor: string | null
 }
 
 function formatarDataBR(dataISO: string) {
@@ -55,22 +63,21 @@ export function NovaTransacaoModal({
     transacaoExistente?.natureza ?? 'negocio'
   )
   const [categoria, setCategoria] = useState(transacaoExistente?.categoria ?? '')
+  const [carteiraId, setCarteiraId] = useState(transacaoExistente?.carteira_id ?? '')
   const [categorias, setCategorias] = useState<
     { id: number; nome: string; tipo: string; natureza_sugerida: string }[]
   >([])
+  const [carteiras, setCarteiras] = useState<Carteira[]>([])
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
+  // Buscar categorias
   useEffect(() => {
     async function carregarCategorias() {
       try {
-        const res = await fetch(
-          `/api/categorias?tipo=${tipo}&natureza=${natureza}`
-        )
+        const res = await fetch(`/api/categorias?tipo=${tipo}&natureza=${natureza}`)
         const data = await res.json()
-        if (res.ok) {
-          setCategorias(data.categorias ?? [])
-        }
+        if (res.ok) setCategorias(data.categorias ?? [])
       } catch (e) {
         console.error('Erro ao carregar categorias:', e)
       }
@@ -78,6 +85,21 @@ export function NovaTransacaoModal({
     carregarCategorias()
   }, [tipo, natureza])
 
+  // Buscar carteiras
+  useEffect(() => {
+    async function carregarCarteiras() {
+      try {
+        const res = await fetch('/api/carteiras')
+        const data = await res.json()
+        if (res.ok) setCarteiras(data.carteiras ?? [])
+      } catch (e) {
+        console.error('Erro ao carregar carteiras:', e)
+      }
+    }
+    carregarCarteiras()
+  }, [])
+
+  // Fecha com ESC
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape' && !loading) onFechar()
@@ -111,9 +133,9 @@ export function NovaTransacaoModal({
             descricao,
             natureza,
             categoria: categoria || null,
+            carteira_id: carteiraId || null,
           }),
         })
-
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
           setErro(data.error || 'Erro ao salvar. Tente novamente.')
@@ -133,6 +155,7 @@ export function NovaTransacaoModal({
         descricao: descricao.trim() || null,
         natureza,
         categoria: categoria || null,
+        carteira_id: carteiraId || null,
         data: dataSelecionada,
       })
 
@@ -287,10 +310,30 @@ export function NovaTransacaoModal({
                 </option>
               ))}
             </select>
-            <p className="text-xs text-zinc-500">
-              Você pode definir a categoria agora ou depois, editando a transação.
-            </p>
           </div>
+
+          {carteiras.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="carteira">Carteira (opcional)</Label>
+              <select
+                id="carteira"
+                value={carteiraId}
+                onChange={(e) => setCarteiraId(e.target.value)}
+                disabled={loading}
+                className="flex h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:opacity-50"
+              >
+                <option value="">Sem carteira</option>
+                {carteiras.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-zinc-500">
+                Selecione de onde saiu ou entrou o dinheiro
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-2">
             <Button
@@ -303,11 +346,7 @@ export function NovaTransacaoModal({
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={loading}>
-              {loading
-                ? 'Salvando...'
-                : modoEdicao
-                ? 'Salvar alterações'
-                : 'Registrar'}
+              {loading ? 'Salvando...' : modoEdicao ? 'Salvar alterações' : 'Registrar'}
             </Button>
           </div>
         </form>
